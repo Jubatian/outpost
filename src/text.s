@@ -53,27 +53,27 @@ text_str_turn:
 text_str_end:
 	.asciz " end "
 text_str_endsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "END"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buypop:
 	.asciz " pop "
 text_str_buypopsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "POP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buyswap:
 	.asciz " swap "
 text_str_buyswapsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "SWAP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buyanyswap:
 	.asciz " anyswap "
 text_str_buyanyswapsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "ANYSWAP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_gameover:
 	.asciz "Game Over"
 text_str_survived:

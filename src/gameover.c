@@ -220,7 +220,7 @@ bool GameOver_Frame(void)
 
    GrText_LL_SetParams(40U, false, 0x00U, 0x00U, 0xFFU);
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
-   text_fill(textarea, 0U, 160U);
+   text_fill(textarea, 0x20U, 160U);
    uint_fast8_t pos = 15U;
    pos += text_genstring(&textarea[pos], TEXT_GAMEOVER);
    pos = 8U + (2U * 40U);
