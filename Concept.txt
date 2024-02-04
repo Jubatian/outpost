@@ -1,0 +1,98 @@
+Original concepts
+------------------------------------------------------------------------------
+
+
+This document is left as a curiosity: this was the initial design idea of the
+game (from around October, 2023), outlining the coarse plans and requirements.
+
+The eventual game doesn't match this initial design exactly, but most of it is
+there. Probably the most notable difference is the diagonally shooting
+ballista towers in the eventually realized game.
+
+
+
+
+
+Concepts, ideas for a tower defense - match 3 game.
+
+
+Mode 72, vertical waves of enemies
+
+Game field:
+
+Mode 72 is 160 pixels wide (1.5 PAR), height may be tall (216px probably)
+if the remaining time can be handled well.
+
+6x6 grid of playfield, 16x24 items (this is square due to PAR), main playfield
+is 96 x 144 this way, seems to be a good size overall (horizontally half
+screen, vertically around 2/3). 6 tiles make a piece, maxing it out, 42 pieces
+could be made.
+
+Sprite mode 1 is probably the best to go with it (16px wide), 4 sprites, 4
+bullets. The sprite width would allow animating swaps and clears.
+
+
+
+Game ideas:
+
+Background - town to defend, hungry dragons (and other things).
+
+Game field:
+
+- Below the 6x6 grid is the town defended.
+- Above is the wilderness from where attacks come.
+- Resources come from above (as in collected from the wilderness).
+
+Controls:
+
+SNES mouse might be nice, but controller may do:
+
+- DPAD moves selector.
+- A selects / deselects tile. Selected tile swaps with DPAD.
+- Long press A drops tile (costs a swap). Higher lv. tiles, longer press.
+- B swaps between grid and gold options.
+- Along gold options, there is a free end turn option (accumulates swaps).
+
+Items available:
+
+- Gold, matching 3 gives gold (all disappears).
+- Iron => Cannon, column, fires upwards, splash damage.
+- Stone => Tower, fires around itself.
+- Wood => Ballista, fires in the row.
+- Apples => Supply depot, buffs around it (4 sides).
+
+Gold collection:
+
+- 2 given for each gold (when matching).
+- For each extra resource tile matched, +1, +2, +3 or +4 is given, for example
+  matching 4 golds gives 7 gold, matching the max. possible of 7 (by a swap, 9
+  is possible otherwise) gives 24 gold (1 + 2 + 3 + 4 + (2 * 7) = 24).
+- The extra gold is further multiplied by the tile's level + 1.
+- Matching 5 of anything gives a level bonus (for example 5 or more woods
+  would give a lv.2 ballista). No extra gold is given for the tiles involved
+  in such combo.
+- Combination bonus (multiple matches) is +3, +6, +9 ...
+
+Gold options:
+
+- End turn (free, accumulates swaps up to twice as normal)
+- (2) +1 Swap, costs +1 for each in turn (hold button to keep adding more)
+- (15) Swap any two tiles (-1 swap)
+- (25) Drop all resources
+- (5) +1 Population (life) (hold button to keep adding more)
+
+Other mechanics:
+
+- Start with 10 population, +1 every turn. Each enemy getting past defences
+  takes (eats) one. Zero - game over.
+- Base swaps: 5, then each 10 pop. adds 1.
+
+Enemies:
+
+- Flying creatures of varied sizes, corresponding health and damage (pop
+  eaten).
+- They fly at the same speed (video mode limitation, getting around the
+  horizontal sprite limit). Maybe at 30px / sec, ~6 secs to cross the field,
+  ~10 secs max per attack phase (maybe just do 30FPS here with an option to go
+  at 60FPS if someone wanted things to go faster).
+- One screenful of enemies, unless using ammo, more wouldn't make much sense.

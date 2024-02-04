@@ -1,0 +1,12 @@
+/_obj_
+/_dep_
+/_bin_/*
+!/_bin_/outpost.hex
+!/_bin_/outpost.uze
+packrom
+packrom.*
+cuzebox
+cuzebox.*
+uzem
+uzem.*
+eeprom.bin

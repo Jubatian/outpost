@@ -1,0 +1,9 @@
+Kernel modifications adapted from Flight of a Dragon.
+
+TODO: VSync mixer isn't called anywhere as of now (lacking VSync tasks in the
+FoaD kernel), might make sense to do so like FoaD did, in the WaitVSync,
+though a bit dicey.
+
+RAM saving could also be explored (VSync mixer with smaller buffer)
+
+

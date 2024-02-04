@@ -1,0 +1,300 @@
+Some examples on how code tiles may be constructed.
+
+
+
+The heading is fixed as follows:
+
+m72_deftilerows:
+	rjmp  tilerow_0
+	rjmp  tilerow_1
+	rjmp  tilerow_2
+	rjmp  tilerow_3
+	rjmp  tilerow_4
+	rjmp  tilerow_5
+	rjmp  tilerow_6
+	rjmp  tilerow_7
+
+tilerow_0:
+	nop                    ; This could be used to load a row address
+	out   PIXOUT,  r1      ; ( 599) Pixel 19
+	jmp   tilerow_entry    ; May jump to common or specific tile code, r0
+	                       ; holds the next pixel's value to out.
+
+The exit is fixed as follows:
+
+tilerow_exit:
+	sbic  GPR0,    1       ; (1622) Color 0 (bg) loading enabled?
+	in    r2,      GPR1    ; (1623) If so, load it
+	sbic  GPR0,    2       ; (1624) Color 15 (border) loading enabled?
+	in    r17,     GPR1    ; (1625) If so, load it
+	ldi   ZL,      LB_SPR - 1 ; (1626) 254(HI):255(LO): Sprite conf
+	out   STACKL,  ZL      ; (1627)
+	ret                    ; (1631)
+
+The border must be started at cycle 1585 (the out finishing in 1586).
+
+
+
+The following code tile generator may be used for simpler cases:
+
+tilerow_0:
+	ldi   ZH,      hi8(pm(tilerow_0_map))
+	out   PIXOUT,  r1      ; ( 599) Pixel 19
+	jmp   tilerow_entry
+
+tilerow_0_map:
+	rjmp  tilerow_block_xx
+	...
+	rjmp  tilerow_block_xx
+
+tilerow_block_xx:
+	out   PIXOUT,  r1
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	out   PIXOUT,  r22
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	out   PIXOUT,  r23
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	rjmp  tilerow_common
+
+tilerow_common:
+	out   PIXOUT,  r0
+	breq  tilerow_exit_c   ; Uses Z flag
+	pop   r0
+tilerow_entry:
+	dec   r20              ; Remaining tile count (Z flag sets accordingly)
+	ld    ZL,      Y+
+	out   PIXOUT,  r0
+	pop   r0
+	pop   r21
+	pop   r1
+	out   PIXOUT,  r0
+	pop   r22
+	pop   r23
+	pop   r0
+	out   PIXOUT,  r21
+	rjmp  .
+	ijmp
+tilerow_exit_c:
+	brts  tilerow_exit     ; (1582 / 1621)
+	mov   r22,     r17
+	mov   r23,     r17
+	movw  r0,      r22
+	out   PIXOUT,  r17     ; (1586)
+	ld    ZL,      Y+
+	set                    ; T reg indicates final exit condition
+	ijmp
+tilerow_exit:
+
+This allows the following structure in an aligned block (bytes):
+
+(Mode0)
+
+0x0000 - 0x01FF: tilerow_0_map
+0x0200 - 0x03FF: tilerow_1_map
+0x0400 - 0x05FF: tilerow_2_map
+0x0600 - 0x07FF: tilerow_3_map
+0x0800 - 0x0FFF: 82 blocks + tilerow_common
+0x1000 - 0x11FF: tilerow_4_map
+0x1200 - 0x13FF: tilerow_5_map
+0x1400 - 0x15FF: tilerow_6_map
+0x1600 - 0x17FF: tilerow_7_map
+
+Either code block can be used in any of the tile rows. This may be useful for
+simple background graphics with lots of reuses. 6 KBytes.
+
+More code blocks can be added as follows:
+
+(Mode1)
+
+0x0000 - 0x07FF: 82 blocks accessible for top rows + tilerow_common_0
+0x0800 - 0x09FF: tilerow_0_map
+0x0A00 - 0x0BFF: tilerow_1_map
+0x0C00 - 0x0DFF: tilerow_2_map
+0x0E00 - 0x0FFF: tilerow_3_map
+0x1000 - 0x17FF: 85 blocks (either to tilerow_common_0 or 1)
+0x1800 - 0x19FF: tilerow_4_map
+0x1A00 - 0x1BFF: tilerow_5_map
+0x1C00 - 0x1DFF: tilerow_6_map
+0x1E00 - 0x1FFF: tilerow_7_map
+0x2000 - 0x27FF: tilerow_common_1 + 82 blocks accessible for bottom rows
+
+This is up to 10 KBytes, should be able to cover most 1bpp backgrounds.
+
+
+
+If more code blocks are necessary, the following code tile generator may be
+applied instead:
+
+tilerow_0:
+	ldi   ZH,      hi8(pm(tilerow_0_map))
+	out   PIXOUT,  r1      ; ( 599) Pixel 19
+	jmp   tilerow_entry
+
+tilerow_0_map:
+	rjmp  tilerow_block_xx_jy
+	...
+	rjmp  tilerow_block_xx_jy
+
+tilerow_block_xx_jy:
+	rjmp  tilerow_block_xx
+
+tilerow_block_xx:
+	out   PIXOUT,  r1
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	out   PIXOUT,  r22
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	out   PIXOUT,  r23
+	st    X+,      r2...r17
+	st    X+,      r2...r17
+	rjmp  tilerow_common
+
+tilerow_common:
+	out   PIXOUT,  r0
+	breq  tilerow_exit_c   ; Uses Z flag
+	pop   r0
+tilerow_entry:
+	dec   r20              ; Remaining tile count (Z flag sets accordingly)
+	ld    ZL,      Y+
+	out   PIXOUT,  r0
+	pop   r0
+	pop   r21
+	pop   r1
+	out   PIXOUT,  r0
+	pop   r22
+	pop   r23
+	pop   r0
+	out   PIXOUT,  r21
+	ijmp
+tilerow_exit_c:
+	brts  tilerow_exit     ; (1582 / 1621)
+	mov   r22,     r17
+	mov   r23,     r17
+	movw  r0,      r22
+	out   PIXOUT,  r17     ; (1586)
+	ld    ZL,      Y+
+	set                    ; T reg indicates final exit condition
+	ijmp
+tilerow_exit:
+
+This generator allows for reaching code tile blocks from farther away,
+expanding possibilities:
+
+(Mode2)
+
+0x0000 - 0x01FF: tilerow_0_map
+0x0200 - 0x03FF: tilerow_1_map
+0x0400 - 0x05FF: tilerow_2_map
+0x0600 - 0x07FF: tilerow_3_map
+0x0800 - 0x0DFF: 64 blocks
+0x0E00 - 0x0F9F: Transfer jumps
+0x0FA0 - 0x0FFF: tilerow_common
+0x1000 - 0x15FF: 64 blocks
+0x1600 - 0x17FF: tilerow_4_map
+0x1800 - 0x19FF: tilerow_5_map
+0x1A00 - 0x1BFF: tilerow_6_map
+0x1C00 - 0x1DFF: tilerow_7_map
+
+(Mode3)
+
+0x0000 - 0x01FF: tilerow_0_map
+0x0200 - 0x03FF: tilerow_1_map
+0x0400 - 0x05FF: tilerow_2_map
+0x0600 - 0x07FF: tilerow_3_map
+0x0800 - 0x0DFF: 64 blocks
+0x0E00 - 0x0F9F: Transfer jumps for the top half to all blocks
+0x0FA0 - 0x15FF: 68 blocks
+0x1600 - 0x179F: Transfer jumps for the bottom half to all blocks
+0x17A0 - 0x17FF: tilerow_common
+0x1800 - 0x1DFF: 64 blocks
+0x1E00 - 0x1FFF: tilerow_4_map
+0x2000 - 0x21FF: tilerow_5_map
+0x2200 - 0x23FF: tilerow_6_map
+0x2400 - 0x25FF: tilerow_7_map
+
+This is up to 9.5 KBytes with everything reachable, less rows, but might have
+higher possibility to cover an 1bpp background or simple tilesets. If there
+are less than 128 tile rows, one of the transfer jump blocks can be removed.
+
+A larger allocation model with all in the middle:
+
+(Mode4)
+
+0x0000 - 0x01FF: tilerow_0_map
+0x0200 - 0x03FF: tilerow_1_map
+0x0400 - 0x05FF: tilerow_2_map
+0x0600 - 0x07FF: tilerow_3_map
+0x0800 - 0x0DFF: 64 blocks accessible for top rows
+0x0E00 - 0x0FB7: Transfer jumps for the top half
+0x0FB8 - 0x0FFF: tilerow_common_0
+0x1000 - 0x1DFF: 149 blocks
+0x1E00 - 0x1FB7: Transfer jumps for the bottom half
+0x1FB8 - 0x1FFF: tilerow_common_1
+0x2000 - 0x25FF: 64 blocks accessible for bottom rows
+0x2600 - 0x27FF: tilerow_4_map
+0x2800 - 0x29FF: tilerow_5_map
+0x2A00 - 0x2BFF: tilerow_6_map
+0x2C00 - 0x2DFF: tilerow_7_map
+
+This is 11.5 KBytes adding more tile rows at the cost of reducing the count of
+those accessible for both top / bottom halves.
+
+The largest allocation model:
+
+(Mode5)
+
+0x0000 - 0x0DFF: 149 blocks accessible for top rows
+0x0E00 - 0x0FB7: Transfer jumps for the top half to top row blocks
+0x0FB8 - 0x0FFF: tilerow_common_0
+0x1000 - 0x15FF: 64 blocks accessible for top rows
+0x1600 - 0x17FF: tilerow_0_map
+0x1800 - 0x19FF: tilerow_1_map
+0x1A00 - 0x1BFF: tilerow_2_map
+0x1C00 - 0x1DFF: tilerow_3_map
+0x1E00 - 0x23FF: 64 blocks accessible for top rows
+0x2400 - 0x25B7: Transfer jumps for the top half
+0x25B8 - 0x25FF: tilerow_common_1
+0x2600 - 0x33FF: 149 blocks
+0x3400 - 0x359F: Transfer jumps for the bottom half
+0x35A0 - 0x35FF: tilerow_common_2
+0x3600 - 0x3BFF: 64 blocks accessible for bottom rows
+0x3C00 - 0x3DFF: tilerow_4_map
+0x3E00 - 0x3FFF: tilerow_5_map
+0x4000 - 0x41FF: tilerow_6_map
+0x4200 - 0x43FF: tilerow_7_map
+0x4400 - 0x49FF: 64 blocks accessible for bottom rows
+0x4A00 - 0x4BB7: Transfer jumps for the bottom half to bottom row blocks
+0x4BB8 - 0x4BFF: tilerow_common_3
+0x4C00 - 0x59FF: 149 blocks accessible for bottom rows
+
+This is up to 22.5 KBytes, should be enough for just about everything (87
+tiles with no reuses at all).
+
+An alternative mode for many shared rows:
+
+(Mode 6)
+
+0x0000 - 0x09FF: 106 blocks
+0x0A00 - 0x0BFF: tilerow_0_map
+0x0C00 - 0x0DFF: tilerow_1_map
+0x0E00 - 0x0EFF: Transfer jumps for the top tile blocks
+0x0F00 - 0x0F3F: tilerow_common_0
+0x0F40 - 0x0FFF: 8 blocks
+0x1000 - 0x11FF: tilerow_2_map
+0x1200 - 0x13FF: tilerow_3_map
+0x1400 - 0x15FF: tilerow_4_map
+0x1600 - 0x17FF: tilerow_5_map
+0x1800 - 0x18FF: Transfer jumps for the bottom tile blocks
+0x1900 - 0x193F: tilerow_common_1
+0x1940 - 0x19FF: 8 blocks
+0x1A00 - 0x1BFF: tilerow_6_map
+0x1C00 - 0x1DFF: tilerow_7_map
+0x1E00 - 0x27FF: 106 blocks
