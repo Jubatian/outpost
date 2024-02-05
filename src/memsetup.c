@@ -66,6 +66,12 @@ void MemSetup(memsetup_arrangement_tdef arrtyp)
    GrText_LL_Init(&memsetup_pool[dpos], 160U, 0U);
    dpos += 160U;
    memsetup_workarea = &memsetup_pool[dpos];
+   break;
+  case MEMSETUP_TITLE:
+   GrText_LL_Init(&memsetup_pool[dpos], 1000U, 0U);
+   dpos += 1000U;
+   memsetup_workarea = &memsetup_pool[dpos];
+   break;
   default:
    break;
  }

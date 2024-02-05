@@ -44,6 +44,7 @@
 #define TEXT_GAMEOVER      12U
 #define TEXT_SURVIVED      13U
 #define TEXT_SURVMONTHS    14U
+#define TEXT_TITLE         15U
 /** @} */
 
 

@@ -19,40 +19,29 @@
 */
 
 
-#ifndef MEMSETUP_H
-#define MEMSETUP_H
+#ifndef TITLE_H
+#define TITLE_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
-
-
-/** Memory arrangement setups */
-typedef enum{
- MEMSETUP_GAMESWAP,
- MEMSETUP_GAMEWAVE,
- MEMSETUP_MENU,
- MEMSETUP_TITLE,
-}memsetup_arrangement_tdef;
 
 
 
 /**
- * @brief   Setup memory allocation
- *
- * Sets memory and resource allocation for a given usage
- *
- * @param   arrtyp: Arrangement type
+ * @brief   Sets up and starts title display and interface
  */
-void MemSetup(memsetup_arrangement_tdef arrtyp);
+void Title_Start(void);
 
 
 /**
- * @brief   Get work area pointer
+ * @brief   Process title sequence frame
  *
- * Some arrangements provide a work area, if not, the return is NULL
+ * Returns true after the title screen is started with Title_Start(), keeps
+ * returning so until this is complete, exited.
+ *
+ * @return          True if title screen is in progess
  */
-uint8_t* MemSetup_GetWorkArea(void);
+bool Title_Frame(void);
 
 
 #endif

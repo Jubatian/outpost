@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 15
+.equ text_strcnt, 16
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -41,6 +41,7 @@ text_strlist:
 	.byte lo8(text_str_gameover), hi8(text_str_gameover)
 	.byte lo8(text_str_survived), hi8(text_str_survived)
 	.byte lo8(text_str_survmonths), hi8(text_str_survmonths)
+	.byte lo8(text_str_title), hi8(text_str_title)
 
 text_str_gold:
 	.asciz "Gold:"
@@ -80,6 +81,8 @@ text_str_survived:
 	.asciz "Survived for "
 text_str_survmonths:
 	.asciz " months"
+text_str_title:
+	.asciz "in the Dragon's Maw"
 
 .balign 2
 

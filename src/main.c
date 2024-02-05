@@ -21,6 +21,7 @@
 #include "palette_ll.h"
 #include "game.h"
 #include "gameover.h"
+#include "title.h"
 #include "sound_ll.h"
 #include "soundpatch.h"
 
@@ -49,45 +50,37 @@ int main(void){
  /* m72_reset = (unsigned int)(&reset); */
  m72_config = 0x14U; /* Sprite mode 1, Border colour expands */
 
- Palette_LL_Fade(255);
+ Palette_LL_Fade(0);
 
  soundpatch_init();
 
-// for (uint_fast8_t chan = 0U; chan < 3U; chan ++){
-//  sound_ll_reseteffects(chan);
-//  sound_ll_setwaveform(chan, SOUND_LL_WAVE_SINE);
-// }
-
-// sound_ll_note(0U, FREQS_A4, 0xFU);
-// sound_ll_setfreqsweep(0U, 0x7FFBU);
-// sound_ll_setvolsweep(0U, 0x0010U);
-// sound_ll_setfreqvib(0U, SOUND_LL_WAVE_DISTSINE, 5U);
-// sound_ll_setvolvib(0U, SOUND_LL_WAVE_DISTSINE, 1U);
-
-// sound_ll_setwaveform(1U, SOUND_LL_WAVE_TRIANGLE);
-// sound_ll_note(1U, FREQS_A4, 0xFU);
-// sound_ll_setfreqsweep(1U, 0x8001U);
-// sound_ll_setvolsweep(1U, 0x0010U);
-
  /* Main loop */
 
- Game_Start();
- bool ingame = true;
+ Title_Start();
+ bool ingame = false;
+ bool intitle = true;
+
  uint_fast8_t stp = 0U;
 
  while(1){
 
   /* Run game */
 
-  if (ingame){
+  if (intitle){
+   if (!(Title_Frame())){
+    Game_Start();
+    intitle = false;
+    ingame = true;
+   }
+  }else if (ingame){
    if (!(Game_Frame())){
     GameOver_Start();
     ingame = false;
    }
   }else{
    if (!(GameOver_Frame())){
-    Game_Start();
-    ingame = true;
+    Title_Start();
+    intitle = true;
    }
   }
 

@@ -75,6 +75,7 @@ OBJECTS += $(OBJDIR)/targeting.o
 OBJECTS += $(OBJDIR)/town.o
 OBJECTS += $(OBJDIR)/game.o
 OBJECTS += $(OBJDIR)/gameover.o
+OBJECTS += $(OBJDIR)/title.o
 OBJECTS += $(OBJDIR)/playfield.o
 OBJECTS += $(OBJDIR)/graphics_bg.o
 OBJECTS += $(OBJDIR)/grsprite.o
@@ -107,6 +108,7 @@ DEPS += $(DEPDIR)/targeting.d
 DEPS += $(DEPDIR)/town.d
 DEPS += $(DEPDIR)/game.d
 DEPS += $(DEPDIR)/gameover.d
+DEPS += $(DEPDIR)/title.d
 DEPS += $(DEPDIR)/playfield.d
 DEPS += $(DEPDIR)/graphics_bg.d
 DEPS += $(DEPDIR)/grsprite.d
@@ -158,6 +160,9 @@ $(OBJDIR)/game.o: src/game.c $(DEPDIR)/game.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/gameover.o: src/gameover.c $(DEPDIR)/gameover.d
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/title.o: src/title.c $(DEPDIR)/title.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/playfield.o: src/playfield.c $(DEPDIR)/playfield.d
