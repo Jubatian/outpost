@@ -82,19 +82,34 @@ bool Title_Frame(void)
   }
   textarea[(2U * 40U) + (5U + 14U)] = 0x0CU;
 
-  title_frame ++;
-
- }else{
+ }else if (title_frame == 30U){
 
   uint8_t* textarea = GrText_LL_GetRowPtr(13U);
   uint_fast8_t pos = 10U;
-  pos += text_genstring(&textarea[pos], TEXT_TITLE);
+  text_genstring(&textarea[pos], TEXT_TITLE);
 
-  uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
-  if (ctrl != 0U){
-   title_active = false;
-  }
+ }else if (title_frame == 90U){
 
+  uint8_t* textarea = GrText_LL_GetRowPtr(16U);
+  uint_fast8_t pos = 11U;
+  text_genstring(&textarea[pos], TEXT_TITLEDESC1);
+
+ }else if (title_frame == 120U){
+
+  uint8_t* textarea = GrText_LL_GetRowPtr(17U);
+  uint_fast8_t pos = 9U;
+  text_genstring(&textarea[pos], TEXT_TITLEDESC2);
+
+ }else{
+ }
+
+ if (title_frame < 255U){
+  title_frame ++;
+ }
+
+ uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
+ if (ctrl != 0U){
+  title_active = false;
  }
 
  return true;

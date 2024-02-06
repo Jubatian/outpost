@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 16
+.equ text_strcnt, 18
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -42,6 +42,8 @@ text_strlist:
 	.byte lo8(text_str_survived), hi8(text_str_survived)
 	.byte lo8(text_str_survmonths), hi8(text_str_survmonths)
 	.byte lo8(text_str_title), hi8(text_str_title)
+	.byte lo8(text_str_titledesc1), hi8(text_str_titledesc1)
+	.byte lo8(text_str_titledesc2), hi8(text_str_titledesc2)
 
 text_str_gold:
 	.asciz "Gold:"
@@ -83,6 +85,10 @@ text_str_survmonths:
 	.asciz " months"
 text_str_title:
 	.asciz "in the Dragon's Maw"
+text_str_titledesc1:
+	.asciz "a game by Jubatian"
+text_str_titledesc2:
+	.asciz "for the Uzebox console"
 
 .balign 2
 

@@ -34,13 +34,9 @@ static uint_fast8_t palette_ll_flev;
 void Palette_LL_Fade(uint_fast8_t flev)
 {
  palette_ll_flev = flev;
- uint_fast16_t flevadj = (uint_fast16_t)(flev) + 1U;
  for (uint_fast8_t ppos = 0U; ppos < 15U; ppos ++){
   uint_fast8_t col = pgm_read_byte(m72_defpalette + ppos);
-  uint_fast8_t red   = ((flevadj * (col & 0x07U)) >> 8) & 0x07U;
-  uint_fast8_t green = ((flevadj * (col & 0x38U)) >> 8) & 0x38U;
-  uint_fast8_t blue  = ((flevadj * (col & 0xC0U)) >> 8) & 0xC0U;
-  palette[ppos] = red | green | blue;
+  palette[ppos] = Palette_LL_FadeColour(col, flev);
  }
 }
 
@@ -68,4 +64,15 @@ void Palette_LL_FadeOut(uint_fast8_t flsub)
  if (flev != palette_ll_flev){
   Palette_LL_Fade(flev);
  }
+}
+
+
+
+uint_fast8_t Palette_LL_FadeColour(uint_fast8_t col, uint_fast8_t flev)
+{
+ uint_fast16_t flevadj = (uint_fast16_t)(flev) + 1U;
+ uint_fast8_t red   = ((flevadj * (col & 0x07U)) >> 8) & 0x07U;
+ uint_fast8_t green = ((flevadj * (col & 0x38U)) >> 8) & 0x38U;
+ uint_fast8_t blue  = ((flevadj * (col & 0xC0U)) >> 8) & 0xC0U;
+ return (red | green | blue);
 }

@@ -56,4 +56,14 @@ void Palette_LL_FadeIn(uint_fast8_t fladd);
 void Palette_LL_FadeOut(uint_fast8_t flsub);
 
 
+/**
+ * @brief   Fade a single colour
+ *
+ * @param   col:    Colour to fade
+ * @param   flev:   Fade level, 255: Full intensity, 0: Black
+ * @return          Result colour
+ */
+uint_fast8_t Palette_LL_FadeColour(uint_fast8_t col, uint_fast8_t flev);
+
+
 #endif
