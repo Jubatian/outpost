@@ -24,6 +24,7 @@
 #include "palette_ll.h"
 #include "control_ll.h"
 #include "grtext_ll.h"
+#include "random.h"
 #include "text.h"
 
 #include <uzebox.h>
@@ -111,6 +112,10 @@ bool Title_Frame(void)
  if (ctrl != 0U){
   title_active = false;
  }
+
+ /* Consume a random number - this randomizes the beginning layout depending
+ ** on the amoung of time elapsed before starting the game */
+ (void)(random_get());
 
  return true;
 }
