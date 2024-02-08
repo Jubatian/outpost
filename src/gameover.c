@@ -46,7 +46,7 @@ static uint_fast8_t gameover_fadeframe;
 static uint_fast8_t gameover_slice;
 
 /** Work buffer */
-static uint8_t*     game_workbuf;
+static uint8_t*     gameover_workbuf;
 
 
 
@@ -59,7 +59,7 @@ void GameOver_Start(void)
  }
 
  Sprite_LL_Init(5U, buf, 100U, NULL, 0U);
- game_workbuf = &buf[100];
+ gameover_workbuf = &buf[100];
 
  gameover_frame = 0U;
  gameover_fadeframe = 0U;
@@ -82,7 +82,7 @@ static void GameOver_DragonSlice(uint_fast8_t slice, uint_fast8_t scale)
 {
  slice &= 1U;
 
- uint8_t* sprcanvas = game_workbuf;
+ uint8_t* sprcanvas = gameover_workbuf;
  sprcanvas += (68U * 4U) * (uint_fast16_t)(slice);
 
  spritecanvas_clear(sprcanvas, 1U, 68U);
@@ -157,10 +157,10 @@ bool GameOver_Frame(void)
  }else if (gameover_frame == 0U){
 
   /* Temporary solution, scaling is costly to render! Will figure out what to
-  ** do with this later more proper. */
+  ** do with this later more proper... Probably will stick permanent :p */
   SetRenderingParameters(FIRST_RENDER_LINE + 10U, 140U);
   GrText_LL_SetParams(0U, false, 0xFFU, 0x00U, 0x00U);
-  uint8_t* sprcanvas = game_workbuf;
+  uint8_t* sprcanvas = gameover_workbuf;
   spritecanvas_clear(sprcanvas, 3U, 136U);
   gameover_frame ++;
 
@@ -175,7 +175,15 @@ bool GameOver_Frame(void)
   uint_fast8_t col1 = (1U << 6) + (2U << 3) + 2U;
   uint_fast8_t col2 = (2U << 6) + (5U << 3) + 5U;
   uint_fast8_t col3 = (3U << 6) + (7U << 3) + 7U;
-  uint8_t* sprcanvas = game_workbuf;
+
+  if (gameover_frame >= 224U){
+   uint_fast8_t flev = (255U - gameover_frame) * 8U;
+   col1 = Palette_LL_FadeColour(col1, flev);
+   col2 = Palette_LL_FadeColour(col2, flev);
+   col3 = Palette_LL_FadeColour(col3, flev);
+  }
+
+  uint8_t* sprcanvas = gameover_workbuf;
   Sprite_LL_Add(
       56U, yadj, 136U,
       col1, col2, col3,
@@ -216,11 +224,11 @@ bool GameOver_Frame(void)
    (void)(Control_LL_Get(CONTROL_LL_ALL));
    gameover_frame ++;
 
-  }else{
+  }else if (gameover_frame < 224U){
 
    GrText_LL_SetParams(40U, false, 0x00U, 0x00U, 0xFFU);
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
-   text_fill(textarea, 0U, 160U);
+   text_fill(textarea, 0x20U, 160U);
    uint_fast8_t pos = 15U;
    pos += text_genstring(&textarea[pos], TEXT_GAMEOVER);
    pos = 8U + (2U * 40U);
@@ -231,8 +239,18 @@ bool GameOver_Frame(void)
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
    if (ctrl != 0U){
-    gameover_active = false;
+    gameover_frame = 224U;
    }
+
+  }else if (gameover_frame < 255U){
+
+   /* Dragon fades out */
+   gameover_frame ++;
+
+  }else{
+
+   gameover_active = false;
+   Sprite_LL_Reset();
 
   }
  }

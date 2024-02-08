@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 15
+.equ text_strcnt, 18
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -41,6 +41,9 @@ text_strlist:
 	.byte lo8(text_str_gameover), hi8(text_str_gameover)
 	.byte lo8(text_str_survived), hi8(text_str_survived)
 	.byte lo8(text_str_survmonths), hi8(text_str_survmonths)
+	.byte lo8(text_str_title), hi8(text_str_title)
+	.byte lo8(text_str_titledesc1), hi8(text_str_titledesc1)
+	.byte lo8(text_str_titledesc2), hi8(text_str_titledesc2)
 
 text_str_gold:
 	.asciz "Gold:"
@@ -53,33 +56,39 @@ text_str_turn:
 text_str_end:
 	.asciz " end "
 text_str_endsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "END"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buypop:
 	.asciz " pop "
 text_str_buypopsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "POP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buyswap:
 	.asciz " swap "
 text_str_buyswapsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "SWAP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_buyanyswap:
 	.asciz " anyswap "
 text_str_buyanyswapsel:
-	.byte 0x1A
+	.byte 0x0E
 	.ascii "ANYSWAP"
-	.byte 0x1B, 0
+	.byte 0x0F, 0
 text_str_gameover:
 	.asciz "Game Over"
 text_str_survived:
 	.asciz "Survived for "
 text_str_survmonths:
 	.asciz " months"
+text_str_title:
+	.asciz "in the Dragon's Maw"
+text_str_titledesc1:
+	.asciz "a game by Jubatian"
+text_str_titledesc2:
+	.asciz "for the Uzebox console"
 
 .balign 2
 

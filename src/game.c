@@ -213,7 +213,7 @@ static void Game_GoldUI(void)
 
  GrText_LL_SetParams(game_textlines, true, 0xBFU, 0x01U, 0xB7U);
  uint8_t* textarea = GrText_LL_GetRowPtr(0U);
- text_fill(textarea, 0U, 40U);
+ text_fill(textarea, 0x20U, 40U);
  uint_fast8_t pos = 0U;
  uint_fast8_t selpos = 0U;
 
@@ -326,7 +326,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
 
  GrText_LL_SetParams(game_textlines, true, 0xBFU, 0x01U, 0xB7U);
  uint8_t* textarea = GrText_LL_GetRowPtr(0U);
- text_fill(textarea, 0U, 40U);
+ text_fill(textarea, 0x20U, 40U);
  uint_fast8_t pos = 0U;
  pos += text_genstring(&textarea[pos], TEXT_GOLD);
  Game_DecOut(&textarea[pos], game_gold, 4U);
