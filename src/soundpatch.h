@@ -39,7 +39,13 @@
 #define SOUNDPATCH_ARROW0    6U
 #define SOUNDPATCH_ARROW1    7U
 #define SOUNDPATCH_MATCH     8U
-#define SOUNDPATCH_TEST      9U
+#define SOUNDPATCH_C4        9U
+#define SOUNDPATCH_Db4       10U
+#define SOUNDPATCH_Bb3       11U
+#define SOUNDPATCH_A3        12U
+#define SOUNDPATCH_DESC1     13U
+#define SOUNDPATCH_DESC2     14U
+#define SOUNDPATCH_TEST      13U
 /** @} */
 
 /** @{ */
@@ -48,6 +54,11 @@
 #define SOUNDPATCH_CH_1      2U
 #define SOUNDPATCH_CH_2      4U
 #define SOUNDPATCH_CH_ALL    7U
+/** @} */
+
+/** @{ */
+/** Available tunes */
+#define SOUNDPATCH_TUNE_END  0U
 /** @} */
 
 
@@ -78,6 +89,18 @@ void soundpatch_tick(void);
  * @param   sound:  The sound to play
  */
 void soundpatch_play(uint8_t chans, uint8_t sound);
+
+
+/**
+ * @brief   Play a tune
+ *
+ * Plays a tune on the given channel (a sequence of sounds with its own
+ * timing)
+ *
+ * @param   chans:  Channel(s) to play on
+ * @param   tune:   The tune to play
+ */
+void soundpatch_playtune(uint8_t chans, uint8_t tune);
 
 
 /**
