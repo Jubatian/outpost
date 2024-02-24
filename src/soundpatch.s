@@ -152,6 +152,39 @@ patch_swap:
 
 patch_test:
 
+patch_a3:
+    .byte CMD_WFREQJUMP + WAVE_TRIANGLE, hi8(FREQS_A3), lo8(FREQS_A3), lo8(patch_bb3_entry - patchdata)
+
+patch_c4:
+    .byte CMD_WFREQJUMP + WAVE_TRIANGLE, hi8(FREQS_C4), lo8(FREQS_C4), lo8(patch_bb3_entry - patchdata)
+
+patch_db4:
+    .byte CMD_WFREQJUMP + WAVE_TRIANGLE, hi8(FREQS_Db4), lo8(FREQS_Db4), lo8(patch_bb3_entry - patchdata)
+
+patch_bb3:
+    .byte CMD_WFREQ + WAVE_TRIANGLE, hi8(FREQS_Bb3), lo8(FREQS_Bb3)
+patch_bb3_entry:
+    .byte CMD_VOLUME + 0x7
+    .byte CMD_VOLSWEEP + 0xF, 0xFD
+    .byte CMD_LOWPRI + 1
+    .byte CMD_END
+
+patch_desc2:
+    .byte CMD_FREQVIB + WAVE_SQUARE, 5
+    .byte CMD_WFREQJUMP + WAVE_SAW, hi8(FREQS_F4), lo8(FREQS_F4), lo8(patch_desc1_entry - patchdata)
+
+patch_desc1:
+    .byte CMD_VOLVIB + WAVE_TRIANGLE, 7
+    .byte CMD_WFREQ + WAVE_SQUARE, hi8(FREQS_C4), lo8(FREQS_C4)
+patch_desc1_entry:
+    .byte CMD_VOLUME + 0
+    .byte CMD_VOLSWEEP + 0x0, 0x30
+    .byte CMD_FREQSWEEP + 0xF, 0xF8
+    .byte CMD_WAIT + 6
+    .byte CMD_VOLSWEEP + 0xF, 0xFF
+    .byte CMD_LOWPRI + 15
+    .byte CMD_END
+
 patch_step:
     .byte CMD_WFREQ + WAVE_NOISE, hi8(FREQS_C3), lo8(FREQS_C3)
     .byte CMD_VOLUME + 0x4
@@ -169,7 +202,44 @@ patchlist:
     .byte lo8(patch_arrow0 - patchdata)
     .byte lo8(patch_arrow1 - patchdata)
     .byte lo8(patch_match - patchdata)
-    .byte lo8(patch_test - patchdata)
+    .byte lo8(patch_c4 - patchdata)
+    .byte lo8(patch_db4 - patchdata)
+    .byte lo8(patch_bb3 - patchdata)
+    .byte lo8(patch_a3 - patchdata)
+    .byte lo8(patch_desc1 - patchdata)
+    .byte lo8(patch_desc2 - patchdata)
+
+
+
+.equ PT_C4,  9
+.equ PT_DB4, 10
+.equ PT_BB3, 11
+.equ PT_A3,  12
+
+tunedata:
+
+tune_end:
+    .byte PT_BB3, 60
+    .byte PT_BB3, 45
+    .byte PT_BB3, 15
+    .byte PT_BB3, 120
+
+    .byte PT_BB3, 60
+    .byte PT_BB3, 45
+    .byte PT_BB3, 15
+    .byte PT_BB3, 60
+    .byte PT_DB4, 45
+    .byte PT_C4,  15
+
+    .byte PT_DB4, 5
+    .byte PT_C4,  40
+    .byte PT_BB3, 15
+    .byte PT_BB3, 45
+    .byte PT_A3,  15
+    .byte PT_BB3, 0
+
+tunelist:
+    .byte lo8(tune_end - tunedata)
 
 
 
@@ -190,6 +260,13 @@ patch_channels:
 .equ CHAN_FLAG_WAIT, 0x20
 .equ CHAN_FLAG_NOPE, 0x10
 .equ CHAN_FLAG_TIME, 0x0F
+
+tune_tick:
+	.space       1
+tune_chans:
+	.space       1
+tune_offs:
+	.space       1
 
 
 
@@ -215,12 +292,43 @@ soundpatch_init:
 
 
 /**
+ * @brief   Processes a tick for tune play
+ *
+ * Advances playing tunes as appropriate, call every frame
+ */
+.global soundpatch_tunetick
+soundpatch_tunetick:
+
+	lds   r24,     tune_tick
+	subi  r24,     1
+	brcs  soundpatch_tunetick_end
+	sts   tune_tick, r24
+	brne  soundpatch_tunetick_end
+	lds   ZL,      tune_offs
+	ldi   ZH,      0
+	subi  ZL,      lo8(-(tunedata))
+	sbci  ZH,      hi8(-(tunedata))
+	lpm   r22,     Z+
+	lpm   r24,     Z+
+	subi  ZL,      lo8(tunedata)
+	sts   tune_offs, ZL
+	sts   tune_tick, r24
+	lds   r24,     tune_chans
+	rcall soundpatch_play
+soundpatch_tunetick_end:
+	ret
+
+
+
+/**
  * @brief   Processes a tick
  *
  * Advances playing patches as appropriate, call every frame
  */
 .global soundpatch_tick
 soundpatch_tick:
+
+	rcall soundpatch_tunetick
 
 	push  r13
 	push  r14
@@ -483,6 +591,31 @@ soundpatch_play_ch0:
 	ldi   r23,     0xF8
 	ldi   r22,     0x00    ; Sweep channel volume quickly down
 	jmp   sound_ll_setvolsweep
+
+
+
+/**
+ * @brief   Play a tune
+ *
+ * Plays a tune on the given channel (a sequence of sounds with its own
+ * timing)
+ *
+ * @param   chans:  Channel(s) to play on
+ * @param   tune:   The tune to play
+ */
+.global soundpatch_playtune
+soundpatch_playtune:
+
+	mov   ZL,      r22
+	ldi   ZH,      0
+	subi  ZL,      lo8(-(tunelist))
+	sbci  ZH,      hi8(-(tunelist))
+	lpm   r22,     Z
+	sts   tune_offs, r22
+	sts   tune_chans, r24
+	ldi   r22,     1
+	sts   tune_tick, r22
+	ret
 
 
 

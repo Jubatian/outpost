@@ -29,6 +29,7 @@
 #include "grtext_ll.h"
 #include "game.h"
 #include "text.h"
+#include "soundpatch.h"
 
 #include <uzebox.h>
 
@@ -156,6 +157,9 @@ bool GameOver_Frame(void)
 
  }else if (gameover_frame == 0U){
 
+  soundpatch_play(SOUNDPATCH_CH_1, SOUNDPATCH_DESC1);
+  soundpatch_play(SOUNDPATCH_CH_2, SOUNDPATCH_DESC2);
+
   /* Temporary solution, scaling is costly to render! Will figure out what to
   ** do with this later more proper... Probably will stick permanent :p */
   SetRenderingParameters(FIRST_RENDER_LINE + 10U, 140U);
@@ -220,6 +224,7 @@ bool GameOver_Frame(void)
 
   }else if (gameover_frame < 131U){
 
+   soundpatch_playtune(SOUNDPATCH_CH_0, SOUNDPATCH_TUNE_END);
    SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES);
    (void)(Control_LL_Get(CONTROL_LL_ALL));
    gameover_frame ++;
