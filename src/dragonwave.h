@@ -73,7 +73,7 @@ void DragonWave_Init(void* buf);
  *
  * @param   turn:   Turn to create dragons for
  */
-void DragonWave_Setup(uint_fast16_t turn);
+void DragonWave_Setup(uint_fast8_t turn);
 
 
 /**

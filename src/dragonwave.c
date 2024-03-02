@@ -214,17 +214,17 @@ static void DragonWave_Boost(uint_fast32_t targethp, uint_fast8_t minsiz)
 
 
 
-void DragonWave_Setup(uint_fast16_t turn)
+void DragonWave_Setup(uint_fast8_t turn)
 {
  /* Dragon layout to use */
  uint_fast8_t lyidx = dragonlayout_getid(random_get() & 0x1FU, turn);
 
  /* Target health point total for the dragons composing the wave. Results in
  ** a minimum of 8 for turn 0, which is one small dragon. */
- uint_fast32_t turnhp = ((turn * 7U) >> 2) + 3U;
+ uint_fast32_t turnhp = (((uint_fast16_t)(turn) * 7U) >> 2) + 3U;
  if (turn >= 24U){
   /* Crank the pressure up somewhat at the 2nd year */
-  turnhp = ((turn * 8U) >> 2) - 3U;
+  turnhp = (((uint_fast16_t)(turn) * 8U) >> 2) - 3U;
  }
  uint_fast32_t targethp = turnhp * turnhp;
 

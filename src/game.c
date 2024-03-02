@@ -70,7 +70,7 @@ static uint_fast16_t game_pop = 0U;
 static uint_fast8_t  game_swaps;
 
 /** Turns survived */
-static uint_fast16_t game_turns;
+static uint_fast8_t  game_turns;
 
 /** Current gold */
 static uint_fast16_t game_gold;
@@ -577,7 +577,7 @@ bool Game_Frame(void)
 
 
 
-uint_fast16_t Game_Score_Turns(void)
+uint_fast8_t Game_Score_Turns(void)
 {
  return game_turns;
 }
