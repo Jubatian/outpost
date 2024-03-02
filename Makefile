@@ -1,5 +1,5 @@
 ###############################################################################
-# Makefile for the project SpriteDemo
+# Makefile for the project Outpost
 ###############################################################################
 
 ## General
@@ -19,6 +19,10 @@ DIRS    = $(OUTDIR) $(OBJDIR) $(DEPDIR)
 PACKROM_DIR = .
 
 
+## Game version string
+VERSION_STR = v1.0
+
+
 ## Uzebox kernel settings
 KERNEL_DIR = src/kernelm72n
 KERNEL_OPTIONS  = -DVIDEO_MODE=72
@@ -36,6 +40,7 @@ CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=28636360UL -Os -fsigned-char
 CFLAGS += -ffunction-sections -fno-toplevel-reorder -fno-tree-switch-conversion
 CFLAGS += -MMD -MP -MT $(*F).o -MF $(DEPDIR)/$(*F).d
 CFLAGS += $(KERNEL_OPTIONS)
+CFLAGS += -DVERSION_STR=\"$(VERSION_STR)\"
 
 ## Stress testing build
 #CFLAGS += -DSTRESSTEST

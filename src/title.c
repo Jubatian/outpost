@@ -101,6 +101,12 @@ bool Title_Frame(void)
   uint_fast8_t pos = 9U;
   text_genstring(&textarea[pos], TEXT_TITLEDESC2);
 
+ }else if (title_frame == 254U){
+
+  uint8_t* textarea = GrText_LL_GetRowPtr(20U);
+  uint_fast8_t pos = 18U;
+  text_genstring(&textarea[pos], TEXT_VERSION);
+
  }else{
  }
 
