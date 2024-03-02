@@ -413,9 +413,11 @@ uint_fast8_t DragonWave_PopArriving(void)
  }
  uint_fast8_t  lastdrg = dragonwave_dcount - 1U;
  uint_fast16_t ypos = dragonwave_dragons[lastdrg].ypos;
- if ((ypos >= 225U) && (ypos < 0x8000U)){
-  /* Arriving dragon; 225 is used for this check as by then the dragon should
-  ** be visually below the edge of the playfield */
+ uint_fast8_t  comp = 204U + ((dragonwave_dragons[lastdrg].dsizstr & 0xFU) * 6U);
+ if ((ypos >= comp) && (ypos < 0x8000U)){
+  /* Arriving dragon as soon as it is below the playfield, doing a coarse
+  ** approximation of it (ideally this should happen after the dragon sprite
+  ** is below, but not long after for related game effects to not lag). */
   uint_fast8_t siz = dragonwave_dragons[lastdrg].dsizstr & 3U;
   DragonWave_Delete(lastdrg);
   return siz;
