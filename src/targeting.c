@@ -107,17 +107,17 @@ void Targeting_Tick(void)
     uint_fast8_t  cdown = 0U;
     switch (pfitem){
      case PLAYFIELD_ARROW1:  dmg =   8U; cdown = 128U; break;
-     case PLAYFIELD_ARROW2:  dmg =  14U; cdown =  52U; break;
-     case PLAYFIELD_ARROW3:  dmg =  20U; cdown =  20U; break;
-     case PLAYFIELD_ARROW4:  dmg =  28U; cdown =   8U; break;
+     case PLAYFIELD_ARROW2:  dmg =  10U; cdown =  52U; break;
+     case PLAYFIELD_ARROW3:  dmg =  12U; cdown =  20U; break;
+     case PLAYFIELD_ARROW4:  dmg =  16U; cdown =   8U; break;
      case PLAYFIELD_TOWER1:  dmg =   8U; cdown = 104U; break;
-     case PLAYFIELD_TOWER2:  dmg =  14U; cdown =  44U; break;
-     case PLAYFIELD_TOWER3:  dmg =  20U; cdown =  16U; break;
-     case PLAYFIELD_TOWER4:  dmg =  32U; cdown =   8U; break;
+     case PLAYFIELD_TOWER2:  dmg =  10U; cdown =  44U; break;
+     case PLAYFIELD_TOWER3:  dmg =  12U; cdown =  16U; break;
+     case PLAYFIELD_TOWER4:  dmg =  18U; cdown =   8U; break;
      case PLAYFIELD_CANNON1: dmg =  16U; cdown = 255U; break;
-     case PLAYFIELD_CANNON2: dmg =  22U; cdown =  96U; break;
-     case PLAYFIELD_CANNON3: dmg =  32U; cdown =  40U; break;
-     case PLAYFIELD_CANNON4: dmg =  60U; cdown =  16U; break;
+     case PLAYFIELD_CANNON2: dmg =  20U; cdown =  96U; break;
+     case PLAYFIELD_CANNON3: dmg =  26U; cdown =  40U; break;
+     case PLAYFIELD_CANNON4: dmg =  32U; cdown =  16U; break;
      default: shooter = false; break;
     }
 

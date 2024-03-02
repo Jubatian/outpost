@@ -80,9 +80,9 @@ static uint_fast16_t DragonWave_GetMaxHealth(uint_fast8_t dsizstr)
  uint_fast8_t dstr = ((dsizstr >> 4) & 0xFU) + 1U;
  switch (dsizstr & 3U){
   case 0U: return (uint_fast16_t)(dstr) * 8U;
-  case 1U: return (uint_fast16_t)(dstr) * 48U;
-  case 2U: return (uint_fast16_t)(dstr) * 320U;
-  default: return (uint_fast16_t)(dstr) * 2048U;
+  case 1U: return (uint_fast16_t)(dstr) * 32U;
+  case 2U: return (uint_fast16_t)(dstr) * 256U;
+  default: return (uint_fast16_t)(dstr) * 1024U;
  }
 }
 
@@ -221,10 +221,10 @@ void DragonWave_Setup(uint_fast16_t turn)
 
  /* Target health point total for the dragons composing the wave. Results in
  ** a minimum of 8 for turn 0, which is one small dragon. */
- uint_fast32_t turnhp = ((turn * 10U) >> 2) + 3U;
+ uint_fast32_t turnhp = ((turn * 7U) >> 2) + 3U;
  if (turn >= 24U){
   /* Crank the pressure up somewhat at the 2nd year */
-  turnhp = ((turn * 11U) >> 2) - 3U;
+  turnhp = ((turn * 8U) >> 2) - 3U;
  }
  uint_fast32_t targethp = turnhp * turnhp;
 
