@@ -70,7 +70,7 @@ static uint_fast16_t game_pop = 0U;
 static uint_fast8_t  game_swaps;
 
 /** Turns survived */
-static uint_fast16_t game_turns;
+static uint_fast8_t  game_turns;
 
 /** Current gold */
 static uint_fast16_t game_gold;
@@ -157,6 +157,26 @@ void Game_Start(void)
  MemSetup(MEMSETUP_GAMESWAP);
  Playfield_Reset();
  Town_Reset();
+}
+
+
+
+/**
+ * @brief   Step sound effect
+ */
+static void Game_Effect_Step(void)
+{
+ soundpatch_play(SOUNDPATCH_CH_ALL, SOUNDPATCH_STEP);
+}
+
+
+
+/**
+ * @brief   Swap sound effect
+ */
+static void Game_Effect_Swap(void)
+{
+ soundpatch_play(SOUNDPATCH_CH_ALL, SOUNDPATCH_SWAP);
 }
 
 
@@ -251,15 +271,18 @@ static void Game_GoldUI(void)
  if (((ctrl & CONTROL_LL_LEFT) != 0U) && (selpos > 0U)){
   selpos --;
   selopt = opts[selpos];
+  Game_Effect_Step();
  }
  if (((ctrl & CONTROL_LL_RIGHT) != 0U) && ((selpos + 1U) < optcnt)){
   selpos ++;
   selopt = opts[selpos];
+  Game_Effect_Step();
  }
  if (((ctrl & CONTROL_LL_LEFT) != 0U) || ((ctrl & CONTROL_LL_RIGHT) != 0U)){
   if ((optcnt <= selpos) || (opts[selpos] != selopt)){
    selpos = 0U; /* In case ran out of funds, let repositioning on end turn */
    selopt = opts[selpos];
+   Game_Effect_Step();
   }
  }
  game_goldselect = selopt;
@@ -302,10 +325,12 @@ static void Game_GoldUI(void)
    default:
     break;
   }
+  Game_Effect_Step();
  }
 
  if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
   game_goldactive = false;
+  Game_Effect_Step();
  }
 }
 
@@ -377,6 +402,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
      if (game_gold > GAME_COST_ANYSWAP){
       game_gold -= GAME_COST_ANYSWAP; /* Cost applied here (allows cancelling) */
       Playfield_Swap(game_xposanyswap, game_yposanyswap, xpos, ypos);
+      Game_Effect_Swap();
       game_swaps --;
      }
      game_yposanyswap = 0U;
@@ -384,6 +410,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
     sel = false;
    }else{
     sel = !sel;
+    Game_Effect_Step();
    }
    if (sel){
     /* Prepare deletion timeout */
@@ -413,6 +440,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
   }
   if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
    game_goldactive = true;
+   Game_Effect_Step();
   }
   if (((ctrl & CONTROL_LL_UP)     != 0U) && (ypos > 1U)){ ypos --; }
   if (((ctrl & CONTROL_LL_DOWN)   != 0U) && (ypos < 6U)){ ypos ++; }
@@ -420,14 +448,14 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
   if (((ctrl & CONTROL_LL_RIGHT)  != 0U) && (xpos < 5U)){ xpos ++; }
 
   if ((pypos != ypos) || (pxpos != xpos)){
-   soundpatch_play(SOUNDPATCH_CH_ALL, SOUNDPATCH_STEP);
+   Game_Effect_Step();
   }
 
   if (sel){
    if (pypos != ypos){ pxpos = xpos; }
    if ((pypos != ypos) || (pxpos != xpos)){
     Playfield_Swap(pxpos, pypos, xpos, ypos);
-    soundpatch_play(SOUNDPATCH_CH_ALL, SOUNDPATCH_SWAP);
+    Game_Effect_Swap();
     game_swaps --;
    }
   }
@@ -446,6 +474,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
      sel = false;
      game_maxdeltime = 0U;
      Playfield_Delete(xpos, ypos);
+     Game_Effect_Swap();
      game_swaps --;
     }
    }
@@ -577,7 +606,7 @@ bool Game_Frame(void)
 
 
 
-uint_fast16_t Game_Score_Turns(void)
+uint_fast8_t Game_Score_Turns(void)
 {
  return game_turns;
 }

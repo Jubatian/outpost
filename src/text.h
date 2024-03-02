@@ -47,6 +47,7 @@
 #define TEXT_TITLE         15U
 #define TEXT_TITLEDESC1    16U
 #define TEXT_TITLEDESC2    17U
+#define TEXT_VERSION       18U
 /** @} */
 
 

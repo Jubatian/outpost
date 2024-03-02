@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 18
+.equ text_strcnt, 19
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -44,6 +44,7 @@ text_strlist:
 	.byte lo8(text_str_title), hi8(text_str_title)
 	.byte lo8(text_str_titledesc1), hi8(text_str_titledesc1)
 	.byte lo8(text_str_titledesc2), hi8(text_str_titledesc2)
+	.byte lo8(text_str_version), hi8(text_str_version)
 
 text_str_gold:
 	.asciz "Gold:"
@@ -89,6 +90,8 @@ text_str_titledesc1:
 	.asciz "a game by Jubatian"
 text_str_titledesc2:
 	.asciz "for the Uzebox console"
+text_str_version:
+	.asciz VERSION_STR
 
 .balign 2
 

@@ -62,7 +62,7 @@ bool Game_Frame(void);
  *
  * @return          Number of turns survived
  */
-uint_fast16_t Game_Score_Turns(void);
+uint_fast8_t Game_Score_Turns(void);
 
 
 #endif

@@ -214,17 +214,17 @@ static void DragonWave_Boost(uint_fast32_t targethp, uint_fast8_t minsiz)
 
 
 
-void DragonWave_Setup(uint_fast16_t turn)
+void DragonWave_Setup(uint_fast8_t turn)
 {
  /* Dragon layout to use */
  uint_fast8_t lyidx = dragonlayout_getid(random_get() & 0x1FU, turn);
 
  /* Target health point total for the dragons composing the wave. Results in
  ** a minimum of 8 for turn 0, which is one small dragon. */
- uint_fast32_t turnhp = ((turn * 7U) >> 2) + 3U;
+ uint_fast32_t turnhp = (((uint_fast16_t)(turn) * 7U) >> 2) + 3U;
  if (turn >= 24U){
   /* Crank the pressure up somewhat at the 2nd year */
-  turnhp = ((turn * 8U) >> 2) - 3U;
+  turnhp = (((uint_fast16_t)(turn) * 8U) >> 2) - 3U;
  }
  uint_fast32_t targethp = turnhp * turnhp;
 
@@ -413,9 +413,11 @@ uint_fast8_t DragonWave_PopArriving(void)
  }
  uint_fast8_t  lastdrg = dragonwave_dcount - 1U;
  uint_fast16_t ypos = dragonwave_dragons[lastdrg].ypos;
- if ((ypos >= 225U) && (ypos < 0x8000U)){
-  /* Arriving dragon; 225 is used for this check as by then the dragon should
-  ** be visually below the edge of the playfield */
+ uint_fast8_t  comp = 204U + ((dragonwave_dragons[lastdrg].dsizstr & 0xFU) * 6U);
+ if ((ypos >= comp) && (ypos < 0x8000U)){
+  /* Arriving dragon as soon as it is below the playfield, doing a coarse
+  ** approximation of it (ideally this should happen after the dragon sprite
+  ** is below, but not long after for related game effects to not lag). */
   uint_fast8_t siz = dragonwave_dragons[lastdrg].dsizstr & 3U;
   DragonWave_Delete(lastdrg);
   return siz;
