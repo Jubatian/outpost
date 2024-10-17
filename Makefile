@@ -238,7 +238,7 @@ $(OBJDIR)/random.o: src/random.s $(DEPDIR)/random.d
 
 ## Generate resources
 $(OBJDIR)/tileset.s: assets/tileset.png tools/tilegen.py
-	$(PYTHON) tools/tilegen.py $< $@
+	$(PYTHON) tools/tilegen_v2.py $< $@
 
 $(OBJDIR)/spriteset.s: assets/spriteset.png tools/spritegen.py
 	$(PYTHON) tools/spritegen.py $< $@
