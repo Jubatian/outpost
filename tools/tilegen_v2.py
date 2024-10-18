@@ -113,11 +113,12 @@ class OpType(Enum):
 # Output word descriptor
 
 class OpDescriptor():
-    def __init__(self, optype, pixels = [], opstring = False, label = False):
+    def __init__(self, optype, pixels = [], opstring = False, label = False, shared = False):
         self.optype = optype
         self.pixels = pixels
         self.opstring = opstring
         self.label = label
+        self.shared = shared
 
 # Add a used word. This is to pad out where ops need to go in the output
 # assembly
@@ -147,8 +148,11 @@ def append_commonjump(ops, pixels):
 
 # Add a head block. Should always have 8 pixels. At least 1 pixel should be
 # generated before the tail jump. Tail jump is initialized with no target.
+# Count only returns worst case here.
 
-def append_head(ops, pixels, tailatpixel):
+def append_head(ops, pixels, tailatpixel, countonly = False):
+    if (countonly):
+        return len(ops) + (tailatpixel + 4)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     ops.append(OpDescriptor(OpType.HEAD, pixels, opstring))
     pixels = pixels[1:]
@@ -156,19 +160,19 @@ def append_head(ops, pixels, tailatpixel):
     append_used(ops, opstring)
     if (tailatpixel <= 1):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
     if (tailatpixel == 2):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
     if (tailatpixel == 3):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
@@ -176,91 +180,129 @@ def append_head(ops, pixels, tailatpixel):
     append_used(ops, opstring)
     if (tailatpixel == 4):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
     if (tailatpixel == 5):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
     if (tailatpixel == 6):
         append_tailjump(ops, pixels)
-        return
+        return len(ops)
     opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
     append_used(ops, opstring)
     pixels = pixels[1:]
     opstring = "\tout   PIXOUT,  r23\n"
     append_used(ops, opstring)
     append_tailjump(ops, pixels)
+    return len(ops)
 
 # Add a tail block. May have up to 7 pixels. At least 1 pixel should be
-# generated before the common jump
+# generated before the common jump. Returns what the new ops list lenght
+# would be, used for attempting padding space with tails.
 
-def append_tail(ops, pixels, commonatpixel):
+def append_tail(ops, pixels, commonatpixel, countonly = False):
+    opslen = len(ops)
     if (len(pixels) > 7):
-        return
+        return opslen
     if (len(pixels) == 7):
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         pixels = pixels[1:]
     if (len(pixels) == 6):
         if (commonatpixel <= 2):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         pixels = pixels[1:]
     if (len(pixels) == 5):
-        opstring = "\tout   PIXOUT,  r22\n"
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+        opslen += 1
+        if (not countonly):
+            opstring = "\tout   PIXOUT,  r22\n"
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         if (commonatpixel == 3):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        append_used(ops, opstring)
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            append_used(ops, opstring)
         pixels = pixels[1:]
     if (len(pixels) == 4):
         if (commonatpixel == 4):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         pixels = pixels[1:]
     if (len(pixels) == 3):
         if (commonatpixel == 5):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         pixels = pixels[1:]
     if (len(pixels) == 2):
-        opstring = "\tout   PIXOUT,  r23\n"
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+        opslen += 1
+        if (not countonly):
+            opstring = "\tout   PIXOUT,  r23\n"
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         if (commonatpixel == 6):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        append_used(ops, opstring)
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            append_used(ops, opstring)
         pixels = pixels[1:]
     if (len(pixels) == 1):
         if (commonatpixel == 7):
-            append_commonjump(ops, pixels)
-            return
-        opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
-        ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
+            opslen += 1
+            if (not countonly):
+                append_commonjump(ops, pixels)
+            return opslen
+        opslen += 1
+        if (not countonly):
+            opstring = "\tst    X+,      r{0}\n".format(pixels[0] + 2)
+            ops.append(OpDescriptor(OpType.TAIL, pixels, opstring))
         pixels = pixels[1:]
     if (len(pixels) == 0):
-        append_commonjump(ops, pixels)
-        return
+        opslen += 1
+        if (not countonly):
+            append_commonjump(ops, pixels)
+    return opslen
 
 # Add a common block. May have up to 6 pixels.
+# Count only returns worst case here.
 
-def append_common(ops, pixels):
+def append_common(ops, pixels, countonly = False):
+    if (countonly):
+        return len(ops) + (len(pixels) + 2 + 30)
     if (len(pixels) > 6):
-        return
+        return len(ops)
     if (len(pixels) == 6):
         opstring = "\tout   PIXOUT,  r22\n"
         ops.append(OpDescriptor(OpType.COMMON, pixels, opstring))
@@ -351,6 +393,7 @@ def append_common(ops, pixels):
     append_used(ops, opstring)
     opstring = "\tret                    ; (1631)\n"
     append_used(ops, opstring)
+    return len(ops)
 
 # Generates label string from address
 
@@ -389,29 +432,36 @@ def count_matching_pixels(pixels1, pixels2):
 # jump). Scans if it might already be available, if not, then scans both
 # existing and not yet resolved heads for possible tail merge options. The new
 # head block is then produced accordingly. Either way, the jump gets resolved
-# and completed.
+# and completed. Pixels can be provided, in which case the passed jump
+# location is assumed not being generated yet (use to place heads ahead of the
+# jump table). Returns True if success, only relevant if an end size is
+# provided to bound the head block.
 
-def gen_head(ops, jumploc):
+def gen_head(ops, jumploc, endloc = -1, headpixels = False):
     startaddress = jumploc - 2048
+    if (headpixels == False):
+        headpixels = ops[jumploc].pixels
     if (startaddress < 0):
         startaddress = 0
     maxtailmatch = 0
     maxtailmatchaddr = False
     # Try already present head blocks first, possibly finding a full match,
-    # which case the jump can be directed there
+    # which case the jump can be directed there. Do this when going ahead as
+    # well to shortcut here, avoiding generating the block.
     for address in range (startaddress, len(ops)):
         if (ops[address].optype == OpType.HEAD):
-            matchcount = count_matching_pixels(ops[address].pixels, ops[jumploc].pixels)
+            matchcount = count_matching_pixels(ops[address].pixels, headpixels)
             if (matchcount == 8):
-                add_label(ops, address)
-                add_jump_op(ops, jumploc, address)
-                return
+                if (jumploc < len(ops)):
+                    add_label(ops, address)
+                    add_jump_op(ops, jumploc, address)
+                return True
     # Check unresolved tail jumps (assuming such jumps can only be further
     # ahead) to see if there might be a suitable tail eventually generated to
     # join with.
     for address in range (jumploc + 1, len(ops)):
         if ((ops[address].optype == OpType.TAILJUMP) and (ops[address].opstring == False)):
-            matchcount = count_matching_pixels(ops[address].pixels, ops[jumploc].pixels)
+            matchcount = count_matching_pixels(ops[address].pixels, headpixels)
             if (matchcount >= maxtailmatch):
                 maxtailmatch = matchcount
     # Check other not yet resolved jumps to see what tail may be best to
@@ -420,7 +470,7 @@ def gen_head(ops, jumploc):
     # resolutions).
     for address in range (jumploc + 1, len(ops)):
         if ((ops[address].optype == OpType.HEADJUMP) and (ops[address].opstring == False)):
-            matchcount = count_matching_pixels(ops[address].pixels, ops[jumploc].pixels)
+            matchcount = count_matching_pixels(ops[address].pixels, headpixels)
             if ((matchcount < 8) and (matchcount >= maxtailmatch)):
                 maxtailmatch = matchcount
     # Check tails in range for the newly generating head, there might be
@@ -430,19 +480,25 @@ def gen_head(ops, jumploc):
         startaddress = 0
     for address in range (startaddress, len(ops)):
         if (ops[address].optype == OpType.TAIL):
-            matchcount = count_matching_pixels(ops[address].pixels, ops[jumploc].pixels)
+            matchcount = count_matching_pixels(ops[address].pixels, headpixels)
             if ((matchcount >= maxtailmatch) and (matchcount == len(ops[address].pixels))):
                 maxtailmatch = matchcount
                 maxtailmatchaddr = address
     # Head block generates assuming the maximum matched tail. Ideally
     # eventually that will be a tail shared, or maybe is already there
     headaddress = len(ops)
-    append_head(ops, ops[jumploc].pixels, 8 - maxtailmatch)
+    if (endloc >= 0):
+        testlen = append_head(ops, headpixels, 8 - maxtailmatch, True)
+        if (testlen > endloc):
+            return False
+    append_head(ops, headpixels, 8 - maxtailmatch)
     if (maxtailmatchaddr != False):
         add_label(ops, maxtailmatchaddr)
         add_jump_op(ops, len(ops) - 1, maxtailmatchaddr)
-    add_label(ops, headaddress)
-    add_jump_op(ops, jumploc, headaddress)
+    if (jumploc < len(ops)):
+        add_label(ops, headaddress)
+        add_jump_op(ops, jumploc, headaddress)
+    return True
 
 # Suggest common block pixels which could be used. This doesn't do anything
 # with the opcodes and attributes, only determines the likely best pixels
@@ -460,15 +516,39 @@ def suggest_common_pixels(ops):
         if ((ops[address].optype == OpType.COMMONJUMP) and (ops[address].opstring == False)):
             if (len(ops[address].pixels) > len(commonpixels)):
                 commonpixels = ops[address].pixels.copy()
-    # Try to find / expand based on unresolved tail jumps (those tails will
-    # need to be generated eventually!)
+    # Collect addresses of tail jumps and unresolved head jumps to accelerate
+    # scans (unresolved head jumps still need a tail, and by that, a common
+    # block eventually, however resolved ones are accounted for by scanning
+    # the tails).
+    jumps = []
+    for address in range (startaddress, len(ops)):
+        if (ops[address].optype == OpType.TAILJUMP):
+            jumps.append(address)
+        if ((ops[address].optype == OpType.HEADJUMP) and (ops[address].opstring == False)):
+            jumps.append(address)
+    # Mark shared jumps to avoid counting them in multiple times for
+    # suggesting a common block. A jump is shared if a subsequent jump could
+    # contain it (that is, it leads to the same or a longer tail, for head
+    # jumps here assume them fitting in)
+    for idx, address in enumerate(jumps):
+        if (not ops[address].shared):
+            for compaddr in jumps[idx + 1:]:
+                pixels = ops[address].pixels
+                comppixels = ops[compaddr].pixels
+                if ((count_matching_pixels(pixels, comppixels)) >= len(pixels)):
+                    ops[address].shared = True
+                    break
+    # Try to find / expand based on unresolved jumps (those tails will need to
+    # to be generated eventually!)
     for pixelpos in range (len(commonpixels), 4):
         pixelbuckets = [0] * 16
-        for address in range (startaddress, len(ops)):
-            if ((ops[address].optype == OpType.TAILJUMP) and (ops[address].opstring == False)):
-                if (len(ops[address].pixels) > pixelpos):
-                    if ((count_matching_pixels(commonpixels, ops[address].pixels)) >= pixelpos):
-                        pixelbuckets[ops[address].pixels[pixelpos]] += 1
+        for address in jumps:
+            if (ops[address].opstring == False):
+                pixels = ops[address].pixels
+                if (len(pixels) > pixelpos):
+                    if ((count_matching_pixels(commonpixels, pixels)) >= pixelpos):
+                        if (not ops[address].shared):
+                            pixelbuckets[pixels[pixelpos]] += 1
         maxindex = 0
         for bucket in range (1, 16):
             if (pixelbuckets[bucket] > pixelbuckets[maxindex]):
@@ -482,9 +562,10 @@ def suggest_common_pixels(ops):
 # jump). Scans if it might be available (it may be a whole or part of an
 # existing tail, entry points being generated for all pixels), if not, the
 # tail is generated along with either holding off generating a common block or
-# joining with one already present.
+# joining with one already present. Returns True if success, only relevant if
+# an end size is provided to bound the tail block.
 
-def gen_tail(ops, jumploc):
+def gen_tail(ops, jumploc, endloc = -1):
     startaddress = jumploc - 2048
     if (startaddress < 0):
         startaddress = 0
@@ -497,7 +578,7 @@ def gen_tail(ops, jumploc):
                 if (matchcount == len(ops[address].pixels)):
                     add_label(ops, address)
                     add_jump_op(ops, jumploc, address)
-                    return
+                    return True
     # Look for a common block in range, matching as many pixels as possible.
     # If found, it will be joined (worst case at the 0 pixel entry point).
     startaddress = len(ops) - (2048 - 10)
@@ -508,27 +589,37 @@ def gen_tail(ops, jumploc):
             matchcount = count_matching_pixels(ops[address].pixels, ops[jumploc].pixels)
             if (matchcount == len(ops[address].pixels)):
                 tailaddress = len(ops)
+                if (endloc >= 0):
+                    testlen = append_tail(ops, ops[jumploc].pixels, 8 - matchcount, True)
+                    if (testlen > endloc):
+                        return False
                 append_tail(ops, ops[jumploc].pixels, 8 - matchcount)
                 add_label(ops, address)
                 add_jump_op(ops, len(ops) - 1, address)
                 add_label(ops, tailaddress)
                 add_jump_op(ops, jumploc, tailaddress)
-                return
+                return True
     # No common block yet, need to guess what it should be, and generate a
     # tail without its common jump resolved.
     commonpixels = suggest_common_pixels(ops)
     matchcount = count_matching_pixels(commonpixels, ops[jumploc].pixels)
     tailaddress = len(ops)
+    if (endloc >= 0):
+        testlen = append_tail(ops, ops[jumploc].pixels, 8 - matchcount, True)
+        if (testlen > endloc):
+            return False
     append_tail(ops, ops[jumploc].pixels, 8 - matchcount)
     add_label(ops, tailaddress)
     add_jump_op(ops, jumploc, tailaddress)
+    return True
 
 # Generate common block to be jumped at from the passed address (of a common
 # jump). Scans if it is already available, if not, generates one according to
 # the best suggestion, and joins it (might not be at the first instruction if
-# a longer common block is found advisable).
+# a longer common block is found advisable). Returns True if success, only
+# relevant if an end size is provided to bound the common block.
 
-def gen_common(ops, jumploc):
+def gen_common(ops, jumploc, endloc = -1):
     startaddress = jumploc - 2048
     if (startaddress < 0):
         startaddress = 0
@@ -541,10 +632,14 @@ def gen_common(ops, jumploc):
                 if (matchcount == len(ops[address].pixels)):
                     add_label(ops, address)
                     add_jump_op(ops, jumploc, address)
-                    return
+                    return True
     # No common block yet, need to guess and generate one, then join into it
     commonpixels = suggest_common_pixels(ops)
     startaddress = len(ops)
+    if (endloc >= 0):
+        testlen = append_common(ops, commonpixels, True)
+        if (testlen > endloc):
+            return False
     append_common(ops, commonpixels)
     for address in range (startaddress, len(ops)):
         if (ops[address].optype == OpType.COMMON):
@@ -553,7 +648,8 @@ def gen_common(ops, jumploc):
                 if (matchcount == len(ops[address].pixels)):
                     add_label(ops, address)
                     add_jump_op(ops, jumploc, address)
-                    return
+                    return True
+    return True
 
 
 
@@ -579,25 +675,18 @@ def resolve_next_jump(ops, startloc, endloc = -1):
     startloc = find_next_unresolved(ops, startloc)
     newstartloc = startloc
     newstartsync = True
-    maxwords = 1000
-    if (endloc >= 0):
-        maxwords = endloc - len(ops)
     while (startloc < len(ops)):
         currentop = ops[startloc]
         if (currentop.optype == OpType.HEADJUMP):
-            if (maxwords >= 11): # Head is max 11 words
-                gen_head(ops, startloc)
+            if (gen_head(ops, startloc, endloc)):
                 break
             newstartsync = False
         if (currentop.optype == OpType.TAILJUMP):
-            if (maxwords >= 10): # Tail is max 10 words
-                gen_tail(ops, startloc)
+            if (gen_tail(ops, startloc, endloc)):
                 break
             newstartsync = False
-            break # Failing to fit anything in remaining space
         if (currentop.optype == OpType.COMMONJUMP):
-            if (maxwords >= 38): # Common is max 38 words
-                gen_common(ops, startloc)
+            if (gen_common(ops, startloc, endloc)):
                 break
             newstartsync = False
         startloc = find_next_unresolved(ops, startloc + 1)
@@ -607,41 +696,84 @@ def resolve_next_jump(ops, startloc, endloc = -1):
 
 
 
-# First unresolved jump's location (might not be at a jump, just tracks to
-# which point jumps were sorted out)
-firstunresolved = 0
+# Attempt to compile tileset with the passed maximum permitted unresolved
+# distance. Returns compiled tileset on success, False on failure. This case a
+# more strict limit on maximum unresolved distance may be attempted (the
+# tileset might favour generating a burst of items requiring later resolution,
+# pushing jumps out of range).
 
-# Max permitted unresolved jump distance before trying to resolve
-maxunresolveddistance = 1850
-
-# Annoted opcode words
-ops = []
-
-for row in range(0, 8):
-    while (firstunresolved < (len(ops) - maxunresolveddistance)):
-        firstunresolved = resolve_next_jump(ops, firstunresolved)
-    jumptableaddress = ((len(ops) + 255) // 256) * 256
-    while (firstunresolved < len(ops)):
-        nextunresolved = resolve_next_jump(ops, firstunresolved, jumptableaddress)
-        if (nextunresolved == firstunresolved):
-            if (firstunresolved < ((jumptableaddress + 256) - maxunresolveddistance)):
-                jumptableaddress += 256
-            else:
+def compile_tileset(rowidx, rowdata, maxunresolveddistance):
+    # First unresolved jump's location (might not be at a jump, just tracks to
+    # which point jumps were sorted out)
+    firstunresolved = 0
+    # Annoted opcode words
+    ops = []
+    # Generate row by row
+    for row in range(0, 8):
+        jumptableaddress = ((len(ops) + 255) // 256) * 256
+        while (firstunresolved < (len(ops) - 512)):
+            # Fill in with tails waiting to be generated, deplete them, but
+            # avoid going unnecessarily far
+            nextunresolved = resolve_next_jump(ops, firstunresolved, jumptableaddress)
+            if (nextunresolved == firstunresolved):
+                if (firstunresolved < ((jumptableaddress + 256) - maxunresolveddistance)):
+                    jumptableaddress += 256
+                else:
+                    break
+            firstunresolved = nextunresolved
+            if (firstunresolved < (len(ops) - 2046)):
+                return False
+        tile = 0
+        while (len(ops) < jumptableaddress):
+            # Generate some head blocks ahead to pad to boundary
+            pixels = rowdata[rowidx[tile][row]]
+            if (not gen_head(ops, jumptableaddress + tile, jumptableaddress, pixels)):
                 break
-        firstunresolved = nextunresolved
-    while (len(ops) < jumptableaddress):
-        opstring = "\tnop\n"
-        append_used(ops, opstring)
-    print("Row {0} Jump table at {1}".format(row, jumptableaddress))
-    for tile in range(0, 256):
-        append_headjump(ops, rowdata[rowidx[tile][row]])
-    ops[jumptableaddress].label = "tilerow_{0}_map".format(row)
-    for tile in range(0, 256):
-        while (firstunresolved < (len(ops) - maxunresolveddistance)):
-            firstunresolved = resolve_next_jump(ops, firstunresolved)
-        gen_head(ops, jumptableaddress + tile)
-while (firstunresolved < len(ops)):
-    firstunresolved = resolve_next_jump(ops, firstunresolved)
+            tile += 1
+            if (tile == 256):
+                break
+        while (firstunresolved < len(ops)):
+            # Any remaining space is padded with whatever available if possible
+            nextunresolved = resolve_next_jump(ops, firstunresolved, jumptableaddress)
+            if (nextunresolved == firstunresolved):
+                break
+            firstunresolved = nextunresolved
+        while (len(ops) < jumptableaddress):
+            opstring = "\tnop\n" # Last resort: nops
+            append_used(ops, opstring)
+        print("Row {0} Jump table at {1}".format(row, jumptableaddress))
+        for tile in range(0, 256):
+            append_headjump(ops, rowdata[rowidx[tile][row]])
+        ops[jumptableaddress].label = "tilerow_{0}_map".format(row)
+        for tile in range(0, 256):
+            # Head blocks normally after the jump table (will detect any match
+            # before, including any head generated ahead)
+            while (firstunresolved < (len(ops) - maxunresolveddistance)):
+                firstunresolved = resolve_next_jump(ops, firstunresolved)
+                if (firstunresolved < (len(ops) - 2046)):
+                    return False
+            gen_head(ops, jumptableaddress + tile)
+    while (firstunresolved < len(ops)):
+        firstunresolved = resolve_next_jump(ops, firstunresolved)
+        if (firstunresolved < (len(ops) - 2046)):
+            return False
+    return ops
+
+
+
+# Attempt compiling tileset, starting with lax attitude towards unresolved
+# jumps, tightening if the tileset fails to compile.
+
+maxunresolveddistance = 2040
+ops = False
+while (True):
+    ops = compile_tileset(rowidx, rowdata, maxunresolveddistance)
+    if (ops == False):
+        print("Failed to compile at max unresolved distance {0}".format(maxunresolveddistance))
+        maxunresolveddistance -= 10
+    else:
+        break
+print("Success compiling at max unresolved distance {0}".format(maxunresolveddistance))
 print("Size: {0} words / {1} bytes".format(len(ops), len(ops) * 2))
 
 # Here code generation should be complete with all jumps resolved
