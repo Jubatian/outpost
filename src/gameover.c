@@ -54,6 +54,8 @@ static uint8_t*     gameover_workbuf;
 void GameOver_Start(void)
 {
  SeqAlloc_Reset();
+ /* These clear any text area and sprites, however leave the background there.
+ ** The entry to the game over screen is fading out that background. */
  GrText_LL_Init(SeqAlloc(160U), 160U, 0U);
  Sprite_LL_Init(5U, SeqAlloc(100U), 100U, NULL, 0U);
  /* Used for the sprite canvas, 136 lines tall, 3 sprites wide, 16px (4 bytes)
@@ -149,10 +151,6 @@ bool GameOver_Frame(void)
  Palette_LL_FadeOut(8U);
  if (gameover_fadeframe < (256U - 8U)){
 
-  /* Note: A bit murky here on memory usage as here the video mode still
-  ** displays the in-game state when the gameover occurred, which includes
-  ** sprites using info from the by now reallocated heap. Works as of now as
-  ** the heap isn't modified until the gameover animation starts proper */
   gameover_fadeframe += 8U;
   return true;
 

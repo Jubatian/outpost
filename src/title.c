@@ -23,6 +23,7 @@
 #include "palette_ll.h"
 #include "control_ll.h"
 #include "grtext_ll.h"
+#include "sprite_ll.h"
 #include "random.h"
 #include "text.h"
 #include "seqalloc.h"
@@ -44,6 +45,9 @@ static uint_fast8_t title_fadeframe;
 void Title_Start(void)
 {
  SeqAlloc_Reset();
+ /* No sprites or bullets, this only ensures clearing whatever may have been
+ ** displaying from the heap. */
+ Sprite_LL_Init(5U, NULL, 0U, NULL, 0U);
  GrText_LL_Init(SeqAlloc(1000U), 1000U, 0U);
  title_frame = 0U;
  title_fadeframe = 0U;
@@ -61,7 +65,6 @@ bool Title_Frame(void)
  Palette_LL_FadeOut(8U);
  if (title_fadeframe < (256U - 8U)){
 
-  /* Murky memory allocation here, see similar note in gameover.c */
   title_fadeframe += 8U;
   return true;
 
