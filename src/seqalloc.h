@@ -19,40 +19,39 @@
 */
 
 
-#ifndef MEMSETUP_H
-#define MEMSETUP_H
+#ifndef SEQALLOC_H
+#define SEQALLOC_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
 
-/** Memory arrangement setups */
-typedef enum{
- MEMSETUP_GAMESWAP,
- MEMSETUP_GAMEWAVE,
- MEMSETUP_MENU,
- MEMSETUP_TITLE,
-}memsetup_arrangement_tdef;
-
+/**
+ * @brief   Reset memory allocator
+ *
+ * Frees all memory to allow for starting anew.
+ */
+void SeqAlloc_Reset(void);
 
 
 /**
- * @brief   Setup memory allocation
+ * @brief   Allocate memory
  *
- * Sets memory and resource allocation for a given usage
+ * Allocates the requested amount of memory. This memory is available until
+ * the next Reset of this module. If there is not enough memory, halts.
  *
- * @param   arrtyp: Arrangement type
+ * @param   count:  Number of bytes to allocate
  */
-void MemSetup(memsetup_arrangement_tdef arrtyp);
+void* SeqAlloc(uint_fast16_t count);
 
 
 /**
- * @brief   Get work area pointer
+ * @brief   Query free heap
  *
- * Some arrangements provide a work area, if not, the return is NULL
+ * @return          Bytes free
  */
-uint8_t* MemSetup_GetWorkArea(void);
+uint_fast16_t SeqAlloc_CountFreeBytes(void);
 
 
 #endif

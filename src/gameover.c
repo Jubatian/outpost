@@ -22,7 +22,6 @@
 #include "gameover.h"
 #include "dragonmaw.h"
 #include "spritecanvas.h"
-#include "memsetup.h"
 #include "sprite_ll.h"
 #include "palette_ll.h"
 #include "control_ll.h"
@@ -30,6 +29,7 @@
 #include "game.h"
 #include "text.h"
 #include "soundpatch.h"
+#include "seqalloc.h"
 
 #include <uzebox.h>
 
@@ -53,15 +53,14 @@ static uint8_t*     gameover_workbuf;
 
 void GameOver_Start(void)
 {
- MemSetup(MEMSETUP_MENU);
- uint8_t* buf = MemSetup_GetWorkArea();
- if (buf == NULL){
-  return;
- }
-
- Sprite_LL_Init(5U, buf, 100U, NULL, 0U);
- gameover_workbuf = &buf[100];
-
+ SeqAlloc_Reset();
+ /* These clear any text area and sprites, however leave the background there.
+ ** The entry to the game over screen is fading out that background. */
+ GrText_LL_Init(SeqAlloc(160U), 160U, 0U);
+ Sprite_LL_Init(5U, SeqAlloc(100U), 100U, NULL, 0U);
+ /* Used for the sprite canvas, 136 lines tall, 3 sprites wide, 16px (4 bytes)
+ ** wide sprites. The right of the dragon is mirrored from the left. */
+ gameover_workbuf = SeqAlloc(136U * 12U);
  gameover_frame = 0U;
  gameover_fadeframe = 0U;
  gameover_slice = 0U;

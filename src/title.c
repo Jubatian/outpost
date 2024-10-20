@@ -20,12 +20,13 @@
 
 
 #include "title.h"
-#include "memsetup.h"
 #include "palette_ll.h"
 #include "control_ll.h"
 #include "grtext_ll.h"
+#include "sprite_ll.h"
 #include "random.h"
 #include "text.h"
+#include "seqalloc.h"
 
 #include <uzebox.h>
 
@@ -43,8 +44,11 @@ static uint_fast8_t title_fadeframe;
 
 void Title_Start(void)
 {
- MemSetup(MEMSETUP_TITLE);
-
+ SeqAlloc_Reset();
+ /* No sprites or bullets, this only ensures clearing whatever may have been
+ ** displaying from the heap. */
+ Sprite_LL_Init(5U, NULL, 0U, NULL, 0U);
+ GrText_LL_Init(SeqAlloc(1000U), 1000U, 0U);
  title_frame = 0U;
  title_fadeframe = 0U;
  title_active = true;

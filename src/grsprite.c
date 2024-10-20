@@ -29,14 +29,31 @@
 
 
 
+/** Buffer used for sprites */
+static uint8_t*      grsprite_buf;
+
+/** Buffer's length */
+static uint_fast16_t grsprite_buflen = 0U;
+
+
+
 void GrSprite_Init(grsprite_arrangement_tdef arrtyp,
     void* buf, uint_fast16_t len,
     uint_fast8_t sprcnt)
 {
- uint8_t* buf8 = (uint8_t*)(buf);
+ grsprite_buf = buf;
+ grsprite_buflen = len;
+ GrSprite_ChangeArrangement(arrtyp, sprcnt);
+}
+
+
+
+void GrSprite_ChangeArrangement(grsprite_arrangement_tdef arrtyp,
+    uint_fast8_t sprcnt)
+{
  uint_fast16_t sprbytes = (uint_fast16_t)(sprcnt) * SPRITE_LL_SPR_SIZE;
- if (sprbytes > len){
-  sprbytes = len;
+ if (sprbytes > grsprite_buflen){
+  sprbytes = grsprite_buflen;
  }
  uint_fast8_t hcount;
  switch (arrtyp){
@@ -44,7 +61,12 @@ void GrSprite_Init(grsprite_arrangement_tdef arrtyp,
   case GRSPRITE_ARR_WAVE: hcount = 4U; break;
   default:                hcount = 4U; break;
  }
- Sprite_LL_Init(hcount, buf8, sprbytes, &buf8[sprbytes], len - sprbytes);
+ Sprite_LL_Init(
+     hcount,
+     grsprite_buf,
+     sprbytes,
+     &grsprite_buf[sprbytes],
+     grsprite_buflen - sprbytes);
 }
 
 

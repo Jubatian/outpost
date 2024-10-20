@@ -60,6 +60,16 @@ void GrSprite_Init(grsprite_arrangement_tdef arrtyp,
 
 
 /**
+ * @brief   Change sprite arrangement
+ *
+ * @param   arrtyp: Arrangement type
+ * @param   sprcnt: Preferred sprite count (rest will be bullets)
+ */
+void GrSprite_ChangeArrangement(grsprite_arrangement_tdef arrtyp,
+    uint_fast8_t sprcnt);
+
+
+/**
  * @brief   Reset (clears) sprites
  */
 void GrSprite_Reset(void);
