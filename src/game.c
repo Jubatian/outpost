@@ -30,8 +30,8 @@
 #include "bullet.h"
 #include "targeting.h"
 #include "town.h"
-#include "memsetup.h"
 #include "soundpatch.h"
+#include "seqalloc.h"
 
 
 
@@ -154,7 +154,13 @@ void Game_Start(void)
  game_textlines = 0U;
  game_startwave = false;
  game_maxdeltime = 0U;
- MemSetup(MEMSETUP_GAMESWAP);
+ SeqAlloc_Reset();
+ GrText_LL_Init(SeqAlloc(40U), 40U, 0U);
+ DragonWave_Init(SeqAlloc(DragonWave_Size()));
+ Bullet_Init(SeqAlloc(Bullet_ItemSize() * 80U), 80U);
+ Targeting_Init(SeqAlloc(Targeting_Size()));
+ uint_fast16_t freebytes = SeqAlloc_CountFreeBytes();
+ GrSprite_Init(GRSPRITE_ARR_SWAP, SeqAlloc(freebytes), freebytes, 32U);
  Playfield_Reset();
  Town_Reset();
 }
@@ -537,7 +543,7 @@ bool Game_Frame(void)
   if (game_startwave){
 
    if (!(pfreport.active)){
-    MemSetup(MEMSETUP_GAMEWAVE);
+    GrSprite_ChangeArrangement(GRSPRITE_ARR_WAVE, 32U);
     DragonWave_Setup(game_turns);
     game_startwave = false;
    }
@@ -568,7 +574,7 @@ bool Game_Frame(void)
 
   }else{
 
-   MemSetup(MEMSETUP_GAMESWAP);
+   GrSprite_ChangeArrangement(GRSPRITE_ARR_SWAP, 32U);
    game_pop ++; /* Population increments at end of turn */
    game_swaps = 4U + (game_pop / 10U) + game_swapcarry;
    game_swapcarry = 0U;

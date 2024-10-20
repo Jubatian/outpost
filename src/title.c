@@ -20,12 +20,12 @@
 
 
 #include "title.h"
-#include "memsetup.h"
 #include "palette_ll.h"
 #include "control_ll.h"
 #include "grtext_ll.h"
 #include "random.h"
 #include "text.h"
+#include "seqalloc.h"
 
 #include <uzebox.h>
 
@@ -43,8 +43,8 @@ static uint_fast8_t title_fadeframe;
 
 void Title_Start(void)
 {
- MemSetup(MEMSETUP_TITLE);
-
+ SeqAlloc_Reset();
+ GrText_LL_Init(SeqAlloc(1000U), 1000U, 0U);
  title_frame = 0U;
  title_fadeframe = 0U;
  title_active = true;
@@ -61,6 +61,7 @@ bool Title_Frame(void)
  Palette_LL_FadeOut(8U);
  if (title_fadeframe < (256U - 8U)){
 
+  /* Murky memory allocation here, see similar note in gameover.c */
   title_fadeframe += 8U;
   return true;
 

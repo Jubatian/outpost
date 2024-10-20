@@ -84,7 +84,7 @@ OBJECTS += $(OBJDIR)/title.o
 OBJECTS += $(OBJDIR)/playfield.o
 OBJECTS += $(OBJDIR)/graphics_bg.o
 OBJECTS += $(OBJDIR)/grsprite.o
-OBJECTS += $(OBJDIR)/memsetup.o
+OBJECTS += $(OBJDIR)/seqalloc.o
 OBJECTS += $(OBJDIR)/soundpatch.o
 OBJECTS += $(OBJDIR)/palette_ll.o
 OBJECTS += $(OBJDIR)/sprite_ll.o
@@ -117,7 +117,7 @@ DEPS += $(DEPDIR)/title.d
 DEPS += $(DEPDIR)/playfield.d
 DEPS += $(DEPDIR)/graphics_bg.d
 DEPS += $(DEPDIR)/grsprite.d
-DEPS += $(DEPDIR)/memsetup.d
+DEPS += $(DEPDIR)/seqalloc.d
 DEPS += $(DEPDIR)/soundpatch.d
 DEPS += $(DEPDIR)/palette_ll.d
 DEPS += $(DEPDIR)/sprite_ll.d
@@ -191,7 +191,7 @@ $(OBJDIR)/graphics_bg.o: src/graphics_bg.c $(DEPDIR)/graphics_bg.d
 $(OBJDIR)/grsprite.o: src/grsprite.c $(DEPDIR)/grsprite.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)/memsetup.o: src/memsetup.c $(DEPDIR)/memsetup.d
+$(OBJDIR)/seqalloc.o: src/seqalloc.c $(DEPDIR)/seqalloc.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/palette_ll.o: src/palette_ll.c $(DEPDIR)/palette_ll.d
