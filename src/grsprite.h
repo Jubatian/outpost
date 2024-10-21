@@ -96,6 +96,14 @@ void GrSprite_AddDragons(void);
 
 
 /**
+ * @brief   Add dragon attack indicators for the coming wave
+ *
+ * @param   maxcnt: Maximum number of indicators to add (ordered by strenght)
+ */
+void GrSprite_AddDragonIndicators(uint_fast8_t maxcnt);
+
+
+/**
  * @brief   Add all bullets currently active
  */
 void GrSprite_AddBullets(void);

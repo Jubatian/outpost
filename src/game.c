@@ -596,6 +596,7 @@ bool Game_Frame(void)
   if (game_textlines < GrText_LL_GetMaxLines()){
    game_textlines ++;
   }
+  GrSprite_AddDragonIndicators(6U);
 
   if (game_goldactive){
    Game_GoldUI();

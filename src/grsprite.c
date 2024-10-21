@@ -222,6 +222,74 @@ void GrSprite_AddDragons(void)
 
 
 
+void GrSprite_AddDragonIndicators(uint_fast8_t maxcnt)
+{
+ uint_fast8_t dcount = DragonWave_Count();
+ uint8_t maxsize[6];
+ uint8_t maxsvar[6];
+ for (uint_fast8_t column = 0U; column < 6U; column ++){
+  maxsize[column] = 0xFFU;
+  maxsvar[column] = 0U;
+ }
+ for (uint_fast8_t drgid = 0U; drgid < dcount; drgid ++){
+  dragonwave_dragon_tdef dpars;
+  DragonWave_GetDragon(drgid, &dpars);
+  uint_fast8_t xpos = dpars.xpos >> 4;
+  if (xpos < 6U){
+   if ((maxsize[xpos] == 0xFFU) || (maxsize[xpos] < dpars.dsize)){
+    maxsize[xpos] = 0U;
+    maxsvar[xpos] = 0U;
+   }
+   if ((maxsize[xpos] <= dpars.dsize) && (maxsvar[xpos] <= dpars.svar)){
+    maxsize[xpos] = dpars.dsize;
+    maxsvar[xpos] = dpars.svar;
+   }
+  }
+ }
+ /* Biggest & strongest dragon for each column obtained, for display
+ ** order by strenght to show the strongest within maxcnt */
+ if (maxcnt > 6U){
+  maxcnt = 6U;
+ }
+ for (uint_fast8_t attempt = 0U; attempt < maxcnt; attempt ++){
+  uint_fast8_t strongest = 0U;
+  for (uint_fast8_t column = 1U; column < 6U; column ++){
+   if (maxsize[strongest] == 0xFFU){
+    strongest = column;
+   }else{
+    if (maxsize[column] != 0xFFU){
+     if (maxsize[column] >= maxsize[strongest]){
+      if (maxsvar[column] >= maxsvar[strongest]){
+       strongest = column;
+      }
+     }
+    }
+   }
+  }
+  if (maxsize[strongest] != 0xFFU){
+   uint_fast32_t cols = dragonlayout_getcolours(maxsvar[strongest]);
+   uint_fast8_t col1 = (cols >> 16) & 0xFFU;
+   uint_fast8_t col2 = (cols >>  8) & 0xFFU;
+   uint_fast8_t col3 = (cols      ) & 0xFFU;
+   uint_fast8_t sprid = 5U + maxsize[strongest]; /* TODO: Temporarily using this */
+   uint_fast8_t sheight = spriteset_getheight(sprid);
+   uint8_t const* sdata = spriteset_getdataptr(sprid);
+   uint_fast8_t xpos = strongest * 16U;
+   xpos += 16U + 32U; /* Align with playfield left */
+   Sprite_LL_Add(xpos, 45U,
+       sheight,
+       col1, col2, col3,
+       sdata,
+       0U);
+  }else{
+   break;
+  }
+  maxsize[strongest] = 0xFFU; /* Consuming this */
+ }
+}
+
+
+
 void GrSprite_AddBullets(void)
 {
  uint_fast8_t bcount = Bullet_GetCount();
