@@ -163,6 +163,7 @@ void Game_Start(void)
  GrSprite_Init(GRSPRITE_ARR_SWAP, SeqAlloc(freebytes), freebytes, 32U);
  Playfield_Reset();
  Town_Reset();
+ DragonWave_Setup(game_turns);
 }
 
 
@@ -544,7 +545,6 @@ bool Game_Frame(void)
 
    if (!(pfreport.active)){
     GrSprite_ChangeArrangement(GRSPRITE_ARR_WAVE, 32U);
-    DragonWave_Setup(game_turns);
     game_startwave = false;
    }
 
@@ -581,6 +581,7 @@ bool Game_Frame(void)
    game_select = false; /* On turn start cursor hovers (no selection) */
    game_boughtswaps = 0U;
    game_turns ++;
+   DragonWave_Setup(game_turns); /* Prepare next turn's dragons */
   }
 
   /* Handle text area */
