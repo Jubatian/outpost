@@ -75,6 +75,9 @@ static uint_fast8_t  game_turns;
 /** Current gold */
 static uint_fast16_t game_gold;
 
+/** Used swaps in the current turn */
+static uint_fast8_t  game_usedswaps;
+
 /** Select or hover cursor mode */
 static bool          game_select;
 
@@ -140,6 +143,7 @@ void Game_Start(void)
  game_turns = 0U;
 #endif
  game_gold = 0U;
+ game_usedswaps = 0U;
  game_select = false;
  game_goldactive = false;
  game_goldselect = GAME_OPT_END;
@@ -163,6 +167,7 @@ void Game_Start(void)
  GrSprite_Init(GRSPRITE_ARR_SWAP, SeqAlloc(freebytes), freebytes, 32U);
  Playfield_Reset();
  Town_Reset();
+ DragonWave_Setup(game_turns);
 }
 
 
@@ -410,6 +415,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
       Playfield_Swap(game_xposanyswap, game_yposanyswap, xpos, ypos);
       Game_Effect_Swap();
       game_swaps --;
+      game_usedswaps ++;
      }
      game_yposanyswap = 0U;
     }
@@ -463,6 +469,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
     Playfield_Swap(pxpos, pypos, xpos, ypos);
     Game_Effect_Swap();
     game_swaps --;
+    game_usedswaps ++;
    }
   }
   if (game_maxdeltime != 0U){
@@ -482,6 +489,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
      Playfield_Delete(xpos, ypos);
      Game_Effect_Swap();
      game_swaps --;
+     game_usedswaps ++;
     }
    }
   }
@@ -544,7 +552,6 @@ bool Game_Frame(void)
 
    if (!(pfreport.active)){
     GrSprite_ChangeArrangement(GRSPRITE_ARR_WAVE, 32U);
-    DragonWave_Setup(game_turns);
     game_startwave = false;
    }
 
@@ -577,10 +584,12 @@ bool Game_Frame(void)
    GrSprite_ChangeArrangement(GRSPRITE_ARR_SWAP, 32U);
    game_pop ++; /* Population increments at end of turn */
    game_swaps = 4U + (game_pop / 10U) + game_swapcarry;
+   game_usedswaps = 0U;
    game_swapcarry = 0U;
    game_select = false; /* On turn start cursor hovers (no selection) */
    game_boughtswaps = 0U;
    game_turns ++;
+   DragonWave_Setup(game_turns); /* Prepare next turn's dragons */
   }
 
   /* Handle text area */
@@ -595,6 +604,7 @@ bool Game_Frame(void)
   if (game_textlines < GrText_LL_GetMaxLines()){
    game_textlines ++;
   }
+  GrSprite_AddDragonIndicators(game_usedswaps);
 
   if (game_goldactive){
    Game_GoldUI();

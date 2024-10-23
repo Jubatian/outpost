@@ -29,6 +29,14 @@
 
 
 
+/** Base position for the Cursor graphics on the sprite sheet */
+#define GRSPRITE_ID_CURSOR  0U
+/** Base position for the Delete graphics on the sprite sheet */
+#define GRSPRITE_ID_DELETE  2U
+/** Base position for the Dragon Indicator graphics on the sprite sheet */
+#define GRSPRITE_ID_INDICATOR  14U
+
+
 /** Buffer used for sprites */
 static uint8_t*      grsprite_buf;
 
@@ -94,13 +102,13 @@ void GrSprite_Cursor(grsprite_cursor_tdef ctyp, uint_fast8_t frame,
  switch (ctyp){
   case GRSPRITE_CURSOR_HOVER:
    /* Could possibly highlight tile reach here */
-   ssel = 0U;
+   ssel = GRSPRITE_ID_CURSOR;
    col1 = 0xF6U;
    col2 = 0xF6U;
    col3 = 0xF6U;
    break;
   case GRSPRITE_CURSOR_SELECT:
-   ssel = (frame >> 6) & 1U;
+   ssel = GRSPRITE_ID_CURSOR + ((frame >> 6) & 1U);
    col1 = 0U;
    if (((frame >> 7) & 1U) != 0U){
     col2 = 0xFFU;
@@ -111,7 +119,7 @@ void GrSprite_Cursor(grsprite_cursor_tdef ctyp, uint_fast8_t frame,
    }
    break;
   case GRSPRITE_CURSOR_ANYSWAP:
-   ssel = (frame >> 6) & 1U;
+   ssel = GRSPRITE_ID_CURSOR + ((frame >> 6) & 1U);
    col1 = 0x01U;
    if (((frame >> 7) & 1U) != 0U){
     col2 = 0x37U;
@@ -125,16 +133,16 @@ void GrSprite_Cursor(grsprite_cursor_tdef ctyp, uint_fast8_t frame,
    col1 = 0x5FU;
    col2 = 0x5FU;
    col3 = 0x5FU;
-   ssel = 2U + (((uint_fast16_t)(frame) * 12U) >> 8);
+   ssel = GRSPRITE_ID_DELETE + (((uint_fast16_t)(frame) * 12U) >> 8);
    Sprite_LL_Add(xpos, ypos + (12U - ((ssel + 1U) >> 1)),
        spriteset_getheight(ssel),
        col1, col2, col3,
        spriteset_getdataptr(ssel),
        0U);
-   ssel = 0U;
+   ssel = GRSPRITE_ID_CURSOR;
    break;
   default:
-   ssel = 0U;
+   ssel = GRSPRITE_ID_CURSOR;
    col1 = 0xFFU;
    col2 = 0xFFU;
    col3 = 0xFFU;
@@ -217,6 +225,75 @@ void GrSprite_AddDragons(void)
    }
    compid ++;
   }
+ }
+}
+
+
+
+void GrSprite_AddDragonIndicators(uint_fast8_t maxcnt)
+{
+ uint_fast8_t dcount = DragonWave_Count();
+ uint8_t maxsize[6];
+ uint8_t maxsvar[6];
+ for (uint_fast8_t column = 0U; column < 6U; column ++){
+  maxsize[column] = 0xFFU;
+  maxsvar[column] = 0U;
+ }
+ for (uint_fast8_t drgid = 0U; drgid < dcount; drgid ++){
+  dragonwave_dragon_tdef dpars;
+  DragonWave_GetDragon(drgid, &dpars);
+  uint_fast8_t xpos = dpars.xpos >> 4;
+  if (xpos < 6U){
+   if ((maxsize[xpos] == 0xFFU) || (maxsize[xpos] < dpars.dsize)){
+    maxsize[xpos] = 0U;
+    maxsvar[xpos] = 0U;
+   }
+   if ((maxsize[xpos] <= dpars.dsize) && (maxsvar[xpos] <= dpars.svar)){
+    maxsize[xpos] = dpars.dsize;
+    maxsvar[xpos] = dpars.svar;
+   }
+  }
+ }
+ /* Biggest & strongest dragon for each column obtained, for display
+ ** order by strenght to show the strongest within maxcnt */
+ if (maxcnt > 6U){
+  maxcnt = 6U;
+ }
+ for (uint_fast8_t attempt = 0U; attempt < maxcnt; attempt ++){
+  uint_fast8_t strongest = 0U;
+  for (uint_fast8_t column = 1U; column < 6U; column ++){
+   if (maxsize[strongest] == 0xFFU){
+    strongest = column;
+   }else{
+    if (maxsize[column] != 0xFFU){
+     if (maxsize[column] >= maxsize[strongest]){
+      if (maxsvar[column] >= maxsvar[strongest]){
+       strongest = column;
+      }
+     }
+    }
+   }
+  }
+  if (maxsize[strongest] != 0xFFU){
+   uint_fast32_t cols = dragonlayout_getcolours(maxsvar[strongest]);
+   uint_fast8_t col1 = (cols >>  8) & 0xFFU; /* Wing colour */
+   uint_fast8_t col2 = (cols      ) & 0xFFU; /* Body colour */
+   uint_fast8_t col3 = 0xBFU;
+   uint_fast8_t sprid = GRSPRITE_ID_INDICATOR + maxsize[strongest];
+   uint_fast8_t sheight = spriteset_getheight(sprid);
+   uint8_t const* sdata = spriteset_getdataptr(sprid);
+   uint_fast8_t xpos = strongest * 16U;
+   uint_fast8_t ypos = (32U + 10U) - maxsize[strongest];
+   xpos += 16U + 32U; /* Align with playfield left */
+   Sprite_LL_Add(xpos, ypos,
+       sheight,
+       col1, col2, col3,
+       sdata,
+       0U);
+  }else{
+   break;
+  }
+  maxsize[strongest] = 0xFFU; /* Consuming this */
  }
 }
 
