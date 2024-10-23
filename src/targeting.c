@@ -59,6 +59,7 @@ void Targeting_Reset(void)
   targeting_dmgacc[tpos] = 0U;
   targeting_cooldown[tpos] = 0U;
  }
+ Bullet_Reset();
 }
 
 
