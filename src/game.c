@@ -78,6 +78,9 @@ static uint_fast16_t game_gold;
 /** Used swaps in the current turn */
 static uint_fast8_t  game_usedswaps;
 
+/** Maximum used swaps (to have something not reducing when undo is used) */
+static uint_fast8_t  game_maxusedswaps;
+
 /** Select or hover cursor mode */
 static bool          game_select;
 
@@ -144,6 +147,7 @@ void Game_Start(void)
 #endif
  game_gold = 0U;
  game_usedswaps = 0U;
+ game_maxusedswaps = 0U;
  game_select = false;
  game_goldactive = false;
  game_goldselect = GAME_OPT_END;
@@ -348,6 +352,18 @@ static void Game_GoldUI(void)
 
 
 /**
+ * @brief   Deduct a swap
+ */
+static void Game_DeductSwap(void)
+{
+ game_swaps --;
+ game_usedswaps ++;
+ game_maxusedswaps = game_usedswaps;
+}
+
+
+
+/**
  * @brief   Main game user interactions
  *
  * @param   pfrep:  Playfield activity report structure
@@ -414,8 +430,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
       game_gold -= GAME_COST_ANYSWAP; /* Cost applied here (allows cancelling) */
       Playfield_Swap(game_xposanyswap, game_yposanyswap, xpos, ypos);
       Game_Effect_Swap();
-      game_swaps --;
-      game_usedswaps ++;
+      Game_DeductSwap();
      }
      game_yposanyswap = 0U;
     }
@@ -466,10 +481,19 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
   if (sel){
    if (pypos != ypos){ pxpos = xpos; }
    if ((pypos != ypos) || (pxpos != xpos)){
-    Playfield_Swap(pxpos, pypos, xpos, ypos);
+    playfield_swapresult_tdef result = Playfield_Swap(pxpos, pypos, xpos, ypos);
     Game_Effect_Swap();
-    game_swaps --;
-    game_usedswaps ++;
+    if (result == PLAYFIELD_SWAP_RESTORE){
+     /* An undo may happen after a wave as well, which case it just adds to
+     ** the swap budget of the next turn. Could be exploited as a quick way
+     ** to carry a swap over, which is OK. */
+     game_swaps ++;
+     if (game_usedswaps > 0U){
+      game_usedswaps --;
+     }
+    }else{
+     Game_DeductSwap();
+    }
    }
   }
   if (game_maxdeltime != 0U){
@@ -488,8 +512,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
      game_maxdeltime = 0U;
      Playfield_Delete(xpos, ypos);
      Game_Effect_Swap();
-     game_swaps --;
-     game_usedswaps ++;
+     Game_DeductSwap();
     }
    }
   }
@@ -585,6 +608,7 @@ bool Game_Frame(void)
    game_pop ++; /* Population increments at end of turn */
    game_swaps = 4U + (game_pop / 10U) + game_swapcarry;
    game_usedswaps = 0U;
+   game_maxusedswaps = 0U;
    game_swapcarry = 0U;
    game_select = false; /* On turn start cursor hovers (no selection) */
    game_boughtswaps = 0U;
@@ -604,7 +628,7 @@ bool Game_Frame(void)
   if (game_textlines < GrText_LL_GetMaxLines()){
    game_textlines ++;
   }
-  GrSprite_AddDragonIndicators(game_usedswaps);
+  GrSprite_AddDragonIndicators(game_maxusedswaps);
 
   if (game_goldactive){
    Game_GoldUI();
