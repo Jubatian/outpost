@@ -413,14 +413,14 @@ playfield_swapresult_tdef Playfield_Swap(
  }
  if (Playfield_IsRestoringSwap(xpos1, ypos1, xpos2, ypos2)){
   playfield_isrestorable = false;
-  result = PLAYFIELD_SWAP_OK;
+  result = PLAYFIELD_SWAP_RESTORE;
  }else{
   playfield_prev_xpos1 = xpos1;
   playfield_prev_ypos1 = ypos1;
   playfield_prev_xpos2 = xpos2;
   playfield_prev_ypos2 = ypos2;
   playfield_isrestorable = true;
-  result = PLAYFIELD_SWAP_RESTORE;
+  result = PLAYFIELD_SWAP_OK;
  }
  playfield_acts[ypos1][xpos1] = PLAYFIELD_ACT_SWAP1 << 4;
  playfield_acts[ypos2][xpos2] = PLAYFIELD_ACT_SWAP2 << 4;
