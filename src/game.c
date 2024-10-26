@@ -66,6 +66,9 @@
 /** Current town population (0: Game over / not running) */
 static uint_fast16_t game_pop = 0U;
 
+/** Total population (including dead) */
+static uint_fast16_t game_totalpop;
+
 /** Remaining swaps in the current turn */
 static uint_fast8_t  game_swaps;
 
@@ -139,6 +142,7 @@ void Game_Reset(void)
 void Game_Start(void)
 {
  game_pop = 10U;
+ game_totalpop = game_pop;
  game_swaps = 5U;
 #ifdef STRESSTEST
  game_turns = 100U;
@@ -213,6 +217,19 @@ static void Game_DecOut(uint8_t* dest, uint_fast16_t val, uint_fast8_t dig)
   *dest = cchr;
   dest ++;
  }
+}
+
+
+
+/**
+ * @brief   Add population
+ *
+ * @param   pop:   Number of people to add
+ */
+static void Game_AddPop(uint_fast8_t pop)
+{
+ game_pop += pop;
+ game_totalpop += pop;
 }
 
 
@@ -317,7 +334,7 @@ static void Game_GoldUI(void)
    case GAME_OPT_POP:
     if (cost <= spendlim){
      game_gold -= cost;
-     game_pop ++;
+     Game_AddPop(1U);
      game_boughtpop ++;
     }
     break;
@@ -605,7 +622,7 @@ bool Game_Frame(void)
   }else{
 
    GrSprite_ChangeArrangement(GRSPRITE_ARR_SWAP, 32U);
-   game_pop ++; /* Population increments at end of turn */
+   Game_AddPop(1U); /* Population increments at end of turn */
    game_swaps = 4U + (game_pop / 10U) + game_swapcarry;
    game_usedswaps = 0U;
    game_maxusedswaps = 0U;
@@ -649,4 +666,11 @@ bool Game_Frame(void)
 uint_fast8_t Game_Score_Turns(void)
 {
  return game_turns;
+}
+
+
+
+uint_fast16_t Game_Score_Pop(void)
+{
+ return game_totalpop;
 }

@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 19
+.equ text_strcnt, 20
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -41,6 +41,7 @@ text_strlist:
 	.byte lo8(text_str_gameover), hi8(text_str_gameover)
 	.byte lo8(text_str_survived), hi8(text_str_survived)
 	.byte lo8(text_str_survmonths), hi8(text_str_survmonths)
+	.byte lo8(text_str_deadpop), hi8(text_str_deadpop)
 	.byte lo8(text_str_title), hi8(text_str_title)
 	.byte lo8(text_str_titledesc1), hi8(text_str_titledesc1)
 	.byte lo8(text_str_titledesc2), hi8(text_str_titledesc2)
@@ -84,6 +85,8 @@ text_str_survived:
 	.asciz "Survived for "
 text_str_survmonths:
 	.asciz " months"
+text_str_deadpop:
+	.asciz " souls lost to the dragons' hunger"
 text_str_title:
 	.asciz "in the Dragon's Maw"
 text_str_titledesc1:
