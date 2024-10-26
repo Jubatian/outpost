@@ -44,10 +44,11 @@
 #define TEXT_GAMEOVER      12U
 #define TEXT_SURVIVED      13U
 #define TEXT_SURVMONTHS    14U
-#define TEXT_TITLE         15U
-#define TEXT_TITLEDESC1    16U
-#define TEXT_TITLEDESC2    17U
-#define TEXT_VERSION       18U
+#define TEXT_DEADPOP       15U
+#define TEXT_TITLE         16U
+#define TEXT_TITLEDESC1    17U
+#define TEXT_TITLEDESC2    18U
+#define TEXT_VERSION       19U
 /** @} */
 
 

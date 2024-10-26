@@ -65,4 +65,12 @@ bool Game_Frame(void);
 uint_fast8_t Game_Score_Turns(void);
 
 
+/**
+ * @brief   Score: Population
+ *
+ * @return          Total population (including dead)
+ */
+uint_fast16_t Game_Score_Pop(void);
+
+
 #endif

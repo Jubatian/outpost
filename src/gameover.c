@@ -56,7 +56,7 @@ void GameOver_Start(void)
  SeqAlloc_Reset();
  /* These clear any text area and sprites, however leave the background there.
  ** The entry to the game over screen is fading out that background. */
- GrText_LL_Init(SeqAlloc(160U), 160U, 0U);
+ GrText_LL_Init(SeqAlloc(200U), 200U, 0U);
  Sprite_LL_Init(5U, SeqAlloc(100U), 100U, NULL, 0U);
  /* Used for the sprite canvas, 136 lines tall, 3 sprites wide, 16px (4 bytes)
  ** wide sprites. The right of the dragon is mirrored from the left. */
@@ -126,18 +126,24 @@ static void GameOver_DragonSlice(uint_fast8_t slice, uint_fast8_t scale)
  *
  * @param   dest:  Destination to output to
  * @param   val:   Value to output
- * @param   dig:   Number of digits
+ * @return         Number of digits output
  */
-static void GameOver_DecOut(uint8_t* dest, uint_fast16_t val, uint_fast8_t dig)
+static uint_fast8_t GameOver_DecOut(uint8_t* dest, uint_fast16_t val)
 {
  uint_fast32_t bcd = text_bin16bcd(val);
- while (dig != 0U){
-  dig --;
-  uint_fast8_t cchr = (bcd >> (4U * dig)) & 0xFU;
+ uint_fast8_t digits = 4U;
+ while ((digits > 1U) && (((bcd >> (4U * (digits - 1U))) & 0xFU) == 0U)){
+  digits --;
+ }
+ uint_fast8_t outputdigit = digits;
+ while (outputdigit != 0U){
+  outputdigit --;
+  uint_fast8_t cchr = (bcd >> (4U * outputdigit)) & 0xFU;
   cchr += '0';
   *dest = cchr;
   dest ++;
  }
+ return digits;
 }
 
 
@@ -232,14 +238,16 @@ bool GameOver_Frame(void)
 
    GrText_LL_SetParams(40U, false, 0x00U, 0x00U, 0xFFU);
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
-   text_fill(textarea, 0x20U, 160U);
+   text_fill(textarea, 0x20U, 200U);
    uint_fast8_t pos = 15U;
    pos += text_genstring(&textarea[pos], TEXT_GAMEOVER);
-   pos = 8U + (2U * 40U);
+   pos = 9U + (2U * 40U);
    pos += text_genstring(&textarea[pos], TEXT_SURVIVED);
-   GameOver_DecOut(&textarea[pos], Game_Score_Turns(), 3U);
-   pos += 3U;
+   pos += GameOver_DecOut(&textarea[pos], Game_Score_Turns());
    pos += text_genstring(&textarea[pos], TEXT_SURVMONTHS);
+   pos = 1U + (3U * 40U);
+   pos += GameOver_DecOut(&textarea[pos], Game_Score_Pop());
+   pos += text_genstring(&textarea[pos], TEXT_DEADPOP);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
    if (ctrl != 0U){
