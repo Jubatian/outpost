@@ -75,6 +75,13 @@
 #define PLAYFIELD_ACT_MATCH 5U
 /** @} */
 
+/** Swap result types */
+typedef enum{
+ PLAYFIELD_SWAP_FAIL,
+ PLAYFIELD_SWAP_OK,
+ PLAYFIELD_SWAP_RESTORE
+}playfield_swapresult_tdef;
+
 
 /** Playfield activity report structure */
 typedef struct{
@@ -111,9 +118,27 @@ void Playfield_Tick(playfield_activity_tdef* report);
  * @param   ypos1:  Y position of item 1
  * @param   xpos2:  X position of item 2
  * @param   ypos2:  Y position of item 2
- * @return          True if a swap is initiated (both items are valid)
+ * @return          Result of swap
  */
-bool Playfield_Swap(
+playfield_swapresult_tdef Playfield_Swap(
+    uint_fast8_t xpos1, uint_fast8_t ypos1,
+    uint_fast8_t xpos2, uint_fast8_t ypos2);
+
+/**
+ * @brief   Check if a swap would restore state before
+ *
+ * This can be used for implementing an undo feature. Returns true if the
+ * swap would restore state before a previous swap. This doesn't change the
+ * state of the playfield, Playfield_Swap() still has to be called with the
+ * same parameters to do so (which this case would succeed).
+ *
+ * @param   xpos1:  X position of item 1
+ * @param   ypos1:  Y position of item 1
+ * @param   xpos2:  X position of item 2
+ * @param   ypos2:  Y position of item 2
+ * @return          True if a swap would restore previous state
+ */
+bool Playfield_IsRestoringSwap(
     uint_fast8_t xpos1, uint_fast8_t ypos1,
     uint_fast8_t xpos2, uint_fast8_t ypos2);
 

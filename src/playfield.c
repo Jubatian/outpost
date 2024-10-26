@@ -38,6 +38,18 @@ static uint8_t playfield_targets[PLAYFIELD_HEIGHT][PLAYFIELD_WIDTH];
 /** Combo gold counter (to count combos while active) */
 static uint_fast8_t playfield_combo;
 
+/** Previous swap's parameters: x position 1 */
+static uint_fast8_t playfield_prev_xpos1;
+/** Previous swap's parameters: y position 1 */
+static uint_fast8_t playfield_prev_ypos1;
+/** Previous swap's parameters: x position 2 */
+static uint_fast8_t playfield_prev_xpos2;
+/** Previous swap's parameters: y position 2 */
+static uint_fast8_t playfield_prev_ypos2;
+
+/** Whether swap might be still restorable */
+static bool playfield_isrestorable;
+
 
 
 /**
@@ -89,6 +101,7 @@ void Playfield_Reset(void)
  }
 #endif
  playfield_combo = 0U;
+ playfield_isrestorable = false;
 }
 
 
@@ -193,11 +206,14 @@ void Playfield_Tick(playfield_activity_tdef* report)
  }
 
  /* Second pass: Add top row items ready to move in if necessary (Note that in
- ** the first pass, top row slots may turn empty if the item fell off) */
+ ** the first pass, top row slots may turn empty if the item fell off). It is
+ ** sufficient to mark non-restorable here as all matching would wind up here,
+ ** generating new items to slide in. */
 
  for (uint_fast8_t xpos = 0U; xpos < PLAYFIELD_WIDTH; xpos ++){
   if (playfield_items[0U][xpos] == PLAYFIELD_EMPTY){
    Playfield_GenItem(xpos, 0U);
+   playfield_isrestorable = false;
   }
  }
 
@@ -357,7 +373,16 @@ void Playfield_Tick(playfield_activity_tdef* report)
 
 
 
-bool Playfield_Swap(
+/**
+ * @brief   Check if the swap is between valid items
+ *
+ * @param   xpos1:  X position of item 1
+ * @param   ypos1:  Y position of item 1
+ * @param   xpos2:  X position of item 2
+ * @param   ypos2:  Y position of item 2
+ * @return          True if these items are valid
+ */
+static bool Playfield_IsSwapValid(
     uint_fast8_t xpos1, uint_fast8_t ypos1,
     uint_fast8_t xpos2, uint_fast8_t ypos2)
 {
@@ -373,11 +398,84 @@ bool Playfield_Swap(
  if (playfield_items[ypos2][xpos2] == PLAYFIELD_EMPTY){
   return false;
  }
+ return true;
+}
+
+
+
+playfield_swapresult_tdef Playfield_Swap(
+    uint_fast8_t xpos1, uint_fast8_t ypos1,
+    uint_fast8_t xpos2, uint_fast8_t ypos2)
+{
+ playfield_swapresult_tdef result = PLAYFIELD_SWAP_FAIL;
+ if (!Playfield_IsSwapValid(xpos1, ypos1, xpos2, ypos2)){
+  return result;
+ }
+ if (Playfield_IsRestoringSwap(xpos1, ypos1, xpos2, ypos2)){
+  playfield_isrestorable = false;
+  result = PLAYFIELD_SWAP_OK;
+ }else{
+  playfield_prev_xpos1 = xpos1;
+  playfield_prev_ypos1 = ypos1;
+  playfield_prev_xpos2 = xpos2;
+  playfield_prev_ypos2 = ypos2;
+  playfield_isrestorable = true;
+  result = PLAYFIELD_SWAP_RESTORE;
+ }
  playfield_acts[ypos1][xpos1] = PLAYFIELD_ACT_SWAP1 << 4;
  playfield_acts[ypos2][xpos2] = PLAYFIELD_ACT_SWAP2 << 4;
  playfield_targets[ypos1][xpos1] = (ypos2 << 4) | xpos2;
  playfield_targets[ypos2][xpos2] = (ypos1 << 4) | xpos1;
- return true;
+ return result;
+}
+
+
+
+/**
+ * @brief   Check if coordinates match
+ *
+ * @param   xpos1:  X coordinate 1
+ * @param   ypos1:  Y coordinate 1
+ * @param   xpos2:  X coordinate 2
+ * @param   ypos2:  Y coordinate 2
+ * @return          True if these are equal
+ */
+static bool Playfield_IsSameCoords(
+    uint_fast8_t xpos1, uint_fast8_t ypos1,
+    uint_fast8_t xpos2, uint_fast8_t ypos2)
+{
+ return ((xpos1 == xpos2) && (ypos1 == ypos2));
+}
+
+
+
+bool Playfield_IsRestoringSwap(
+    uint_fast8_t xpos1, uint_fast8_t ypos1,
+    uint_fast8_t xpos2, uint_fast8_t ypos2)
+{
+ if (!Playfield_IsSwapValid(xpos1, ypos1, xpos2, ypos2)){
+  return false;
+ }
+ if (!playfield_isrestorable){
+  return false;
+ }
+ bool coordmatch1;
+ bool coordmatch2;
+ coordmatch1 = Playfield_IsSameCoords(
+     xpos1, ypos1, playfield_prev_xpos1, playfield_prev_ypos1);
+ coordmatch2 = Playfield_IsSameCoords(
+     xpos2, ypos2, playfield_prev_xpos2, playfield_prev_ypos2);
+ if (coordmatch1 && coordmatch2){
+  return true;
+ }
+ coordmatch1 = Playfield_IsSameCoords(
+     xpos2, ypos2, playfield_prev_xpos1, playfield_prev_ypos1);
+ coordmatch2 = Playfield_IsSameCoords(
+     xpos1, ypos1, playfield_prev_xpos2, playfield_prev_ypos2);
+ if (coordmatch1 && coordmatch2){
+  return true;
+ }
+ return false;
 }
 
 
