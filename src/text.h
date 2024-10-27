@@ -82,4 +82,36 @@ void text_fill(uint8_t* dest, uint8_t data, uint16_t len);
 uint32_t text_bin16bcd(uint16_t val);
 
 
+/**
+ * @brief   Output decimal value with space front padding
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @param   digits: Number of digits to display (space front padding)
+ * @return          Number of digits output (always the same as digits)
+ */
+uint8_t text_decout_spacepad(uint8_t* dest, uint16_t val, uint8_t digits);
+
+
+/**
+ * @brief   Output decimal value with zero front padding
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @param   digits: Number of digits to display (zero front padding)
+ * @return          Number of digits output (always the same as digits)
+ */
+uint8_t text_decout_zeropad(uint8_t* dest, uint16_t val, uint8_t digits);
+
+
+/**
+ * @brief   Output decimal value
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @return          Number of digits output
+ */
+uint8_t text_decout(uint8_t* dest, uint16_t val);
+
+
 #endif

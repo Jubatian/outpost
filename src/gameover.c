@@ -122,33 +122,6 @@ static void GameOver_DragonSlice(uint_fast8_t slice, uint_fast8_t scale)
 
 
 
-/**
- * @brief   Output numeric data
- *
- * @param   dest:  Destination to output to
- * @param   val:   Value to output
- * @return         Number of digits output
- */
-static uint_fast8_t GameOver_DecOut(uint8_t* dest, uint_fast16_t val)
-{
- uint_fast32_t bcd = text_bin16bcd(val);
- uint_fast8_t digits = 4U;
- while ((digits > 1U) && (((bcd >> (4U * (digits - 1U))) & 0xFU) == 0U)){
-  digits --;
- }
- uint_fast8_t outputdigit = digits;
- while (outputdigit != 0U){
-  outputdigit --;
-  uint_fast8_t cchr = (bcd >> (4U * outputdigit)) & 0xFU;
-  cchr += '0';
-  *dest = cchr;
-  dest ++;
- }
- return digits;
-}
-
-
-
 bool GameOver_Frame(void)
 {
  if (!gameover_active){
@@ -244,10 +217,10 @@ bool GameOver_Frame(void)
    pos += text_genstring(&textarea[pos], TEXT_GAMEOVER);
    pos = 9U + (2U * 40U);
    pos += text_genstring(&textarea[pos], TEXT_SURVIVED);
-   pos += GameOver_DecOut(&textarea[pos], Game_Score_Turns());
+   pos += text_decout(&textarea[pos], Game_Score_Turns());
    pos += text_genstring(&textarea[pos], TEXT_SURVMONTHS);
    pos = 1U + (3U * 40U);
-   pos += GameOver_DecOut(&textarea[pos], Game_Score_Pop());
+   pos += text_decout(&textarea[pos], Game_Score_Pop());
    pos += text_genstring(&textarea[pos], TEXT_DEADPOP);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);

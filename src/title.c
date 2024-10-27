@@ -57,33 +57,6 @@ void Title_Start(void)
 
 
 
-/**
- * @brief   Output numeric data
- *
- * @param   dest:  Destination to output to
- * @param   val:   Value to output
- * @return         Number of digits output
- */
-static uint_fast8_t Title_DecOut(uint8_t* dest, uint_fast16_t val)
-{
- uint_fast32_t bcd = text_bin16bcd(val);
- uint_fast8_t digits = 4U;
- while ((digits > 1U) && (((bcd >> (4U * (digits - 1U))) & 0xFU) == 0U)){
-  digits --;
- }
- uint_fast8_t outputdigit = digits;
- while (outputdigit != 0U){
-  outputdigit --;
-  uint_fast8_t cchr = (bcd >> (4U * outputdigit)) & 0xFU;
-  cchr += '0';
-  *dest = cchr;
-  dest ++;
- }
- return digits;
-}
-
-
-
 bool Title_Frame(void)
 {
  if (!title_active){
@@ -147,10 +120,10 @@ bool Title_Frame(void)
    pos += HISCORE_NAME_MAX;
    textarea[pos] = ' ';
    pos ++;
-   pos += Title_DecOut(&textarea[pos], months);
+   pos += text_decout(&textarea[pos], months);
    textarea[pos] = ' ';
    pos ++;
-   pos += Title_DecOut(&textarea[pos], pop);
+   pos += text_decout(&textarea[pos], pop);
   }
 
  }else{
