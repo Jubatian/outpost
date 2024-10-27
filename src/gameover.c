@@ -29,6 +29,7 @@
 #include "game.h"
 #include "text.h"
 #include "soundpatch.h"
+#include "hiscore.h"
 #include "seqalloc.h"
 
 #include <uzebox.h>
@@ -263,6 +264,19 @@ bool GameOver_Frame(void)
 
    gameover_active = false;
    Sprite_LL_Reset();
+   /* Add high score with a default name for now, good enough for demoing
+   ** this feature */
+   uint8_t name[9];
+   name[0] = 'G';
+   name[1] = 'o';
+   name[2] = 'v';
+   name[3] = 'e';
+   name[4] = 'r';
+   name[5] = 'n';
+   name[6] = 'o';
+   name[7] = 'r';
+   name[8] = 0U;
+   HiScore_Send(&name[0], Game_Score_Turns(), Game_Score_Pop());
 
   }
  }

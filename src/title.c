@@ -26,6 +26,7 @@
 #include "sprite_ll.h"
 #include "random.h"
 #include "text.h"
+#include "hiscore.h"
 #include "seqalloc.h"
 
 #include <uzebox.h>
@@ -52,6 +53,33 @@ void Title_Start(void)
  title_frame = 0U;
  title_fadeframe = 0U;
  title_active = true;
+}
+
+
+
+/**
+ * @brief   Output numeric data
+ *
+ * @param   dest:  Destination to output to
+ * @param   val:   Value to output
+ * @return         Number of digits output
+ */
+static uint_fast8_t Title_DecOut(uint8_t* dest, uint_fast16_t val)
+{
+ uint_fast32_t bcd = text_bin16bcd(val);
+ uint_fast8_t digits = 4U;
+ while ((digits > 1U) && (((bcd >> (4U * (digits - 1U))) & 0xFU) == 0U)){
+  digits --;
+ }
+ uint_fast8_t outputdigit = digits;
+ while (outputdigit != 0U){
+  outputdigit --;
+  uint_fast8_t cchr = (bcd >> (4U * outputdigit)) & 0xFU;
+  cchr += '0';
+  *dest = cchr;
+  dest ++;
+ }
+ return digits;
 }
 
 
@@ -110,6 +138,20 @@ bool Title_Frame(void)
   uint8_t* textarea = GrText_LL_GetRowPtr(20U);
   uint_fast8_t pos = 18U;
   text_genstring(&textarea[pos], TEXT_VERSION);
+  for (uint_fast8_t rank = 0U; rank < HISCORE_TABLE_SIZE; rank ++){
+   textarea = GrText_LL_GetRowPtr(16U + rank);
+   pos = 8U;
+   uint_fast8_t months;
+   uint_fast16_t pop;
+   HiScore_Get(rank, &textarea[pos], &months, &pop);
+   pos += HISCORE_NAME_MAX;
+   textarea[pos] = ' ';
+   pos ++;
+   pos += Title_DecOut(&textarea[pos], months);
+   textarea[pos] = ' ';
+   pos ++;
+   pos += Title_DecOut(&textarea[pos], pop);
+  }
 
  }else{
  }
