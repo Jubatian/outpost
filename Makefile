@@ -90,6 +90,7 @@ OBJECTS += $(OBJDIR)/palette_ll.o
 OBJECTS += $(OBJDIR)/sprite_ll.o
 OBJECTS += $(OBJDIR)/grtext_ll.o
 OBJECTS += $(OBJDIR)/control_ll.o
+OBJECTS += $(OBJDIR)/nvstore_ll.o
 OBJECTS += $(OBJDIR)/sound_ll.o
 OBJECTS += $(OBJDIR)/$(GAME).o
 
@@ -123,6 +124,7 @@ DEPS += $(DEPDIR)/palette_ll.d
 DEPS += $(DEPDIR)/sprite_ll.d
 DEPS += $(DEPDIR)/grtext_ll.d
 DEPS += $(DEPDIR)/control_ll.d
+DEPS += $(DEPDIR)/nvstore_ll.d
 DEPS += $(DEPDIR)/sound_ll.d
 DEPS += $(DEPDIR)/$(GAME).d
 
@@ -204,6 +206,9 @@ $(OBJDIR)/grtext_ll.o: src/grtext_ll.c $(DEPDIR)/grtext_ll.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/control_ll.o: src/control_ll.c $(DEPDIR)/control_ll.d
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/nvstore_ll.o: src/nvstore_ll.c $(DEPDIR)/nvstore_ll.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/sound_ll.o: src/sound_ll.s $(DEPDIR)/sound_ll.d
