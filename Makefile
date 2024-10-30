@@ -80,6 +80,7 @@ OBJECTS += $(OBJDIR)/targeting.o
 OBJECTS += $(OBJDIR)/town.o
 OBJECTS += $(OBJDIR)/game.o
 OBJECTS += $(OBJDIR)/gameover.o
+OBJECTS += $(OBJDIR)/hiscore.o
 OBJECTS += $(OBJDIR)/title.o
 OBJECTS += $(OBJDIR)/playfield.o
 OBJECTS += $(OBJDIR)/graphics_bg.o
@@ -90,6 +91,7 @@ OBJECTS += $(OBJDIR)/palette_ll.o
 OBJECTS += $(OBJDIR)/sprite_ll.o
 OBJECTS += $(OBJDIR)/grtext_ll.o
 OBJECTS += $(OBJDIR)/control_ll.o
+OBJECTS += $(OBJDIR)/nvstore_ll.o
 OBJECTS += $(OBJDIR)/sound_ll.o
 OBJECTS += $(OBJDIR)/$(GAME).o
 
@@ -113,6 +115,7 @@ DEPS += $(DEPDIR)/targeting.d
 DEPS += $(DEPDIR)/town.d
 DEPS += $(DEPDIR)/game.d
 DEPS += $(DEPDIR)/gameover.d
+DEPS += $(DEPDIR)/hiscore.d
 DEPS += $(DEPDIR)/title.d
 DEPS += $(DEPDIR)/playfield.d
 DEPS += $(DEPDIR)/graphics_bg.d
@@ -123,6 +126,7 @@ DEPS += $(DEPDIR)/palette_ll.d
 DEPS += $(DEPDIR)/sprite_ll.d
 DEPS += $(DEPDIR)/grtext_ll.d
 DEPS += $(DEPDIR)/control_ll.d
+DEPS += $(DEPDIR)/nvstore_ll.d
 DEPS += $(DEPDIR)/sound_ll.d
 DEPS += $(DEPDIR)/$(GAME).d
 
@@ -194,6 +198,9 @@ $(OBJDIR)/grsprite.o: src/grsprite.c $(DEPDIR)/grsprite.d
 $(OBJDIR)/seqalloc.o: src/seqalloc.c $(DEPDIR)/seqalloc.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
+$(OBJDIR)/hiscore.o: src/hiscore.c $(DEPDIR)/hiscore.d
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
 $(OBJDIR)/palette_ll.o: src/palette_ll.c $(DEPDIR)/palette_ll.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
@@ -204,6 +211,9 @@ $(OBJDIR)/grtext_ll.o: src/grtext_ll.c $(DEPDIR)/grtext_ll.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/control_ll.o: src/control_ll.c $(DEPDIR)/control_ll.d
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/nvstore_ll.o: src/nvstore_ll.c $(DEPDIR)/nvstore_ll.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/sound_ll.o: src/sound_ll.s $(DEPDIR)/sound_ll.d

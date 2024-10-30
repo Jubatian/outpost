@@ -29,6 +29,7 @@
 #include "game.h"
 #include "text.h"
 #include "soundpatch.h"
+#include "hiscore.h"
 #include "seqalloc.h"
 
 #include <uzebox.h>
@@ -46,24 +47,42 @@ static uint_fast8_t gameover_fadeframe;
 /** Dragon slice cycle */
 static uint_fast8_t gameover_slice;
 
-/** Work buffer */
-static uint8_t*     gameover_workbuf;
+/** Sprite canvas where the dragon is rendered */
+static uint8_t*     gameover_sprcanvas;
+
+/** Text area buffer */
+static uint8_t*     gameover_textarea;
+
+/** Name for high-score entry. Having it here as static allows it to
+ *  persist across plays which is nice, we have enough RAM! */
+static uint8_t      gameover_name[HISCORE_NAME_MAX];
+
+/** Cursor position for high-score entry */
+static uint_fast8_t gameover_cursor;
+
+/** Uppercase selector for high-score entry */
+static bool         gameover_uppercase;
 
 
 
 void GameOver_Start(void)
 {
  SeqAlloc_Reset();
+ /* Used for the sprite canvas, 136 lines tall, 3 sprites wide, 16px (4 bytes)
+ ** wide sprites. The right of the dragon is mirrored from the left. Text area
+ ** joins afterwards so it can later use sprite canvas area for more text for
+ ** high score entry. */
+ gameover_sprcanvas = SeqAlloc((136U * 12U) + (5U * 40U));
+ gameover_textarea = gameover_sprcanvas + (136U * 12U);
  /* These clear any text area and sprites, however leave the background there.
  ** The entry to the game over screen is fading out that background. */
- GrText_LL_Init(SeqAlloc(200U), 200U, 0U);
+ GrText_LL_Init(gameover_textarea, (5U * 40U), 0U);
  Sprite_LL_Init(5U, SeqAlloc(100U), 100U, NULL, 0U);
- /* Used for the sprite canvas, 136 lines tall, 3 sprites wide, 16px (4 bytes)
- ** wide sprites. The right of the dragon is mirrored from the left. */
- gameover_workbuf = SeqAlloc(136U * 12U);
  gameover_frame = 0U;
  gameover_fadeframe = 0U;
  gameover_slice = 0U;
+ gameover_cursor = 0U;
+ gameover_uppercase = true;
  gameover_active = true;
 }
 
@@ -82,7 +101,7 @@ static void GameOver_DragonSlice(uint_fast8_t slice, uint_fast8_t scale)
 {
  slice &= 1U;
 
- uint8_t* sprcanvas = gameover_workbuf;
+ uint8_t* sprcanvas = gameover_sprcanvas;
  sprcanvas += (68U * 4U) * (uint_fast16_t)(slice);
 
  spritecanvas_clear(sprcanvas, 1U, 68U);
@@ -121,38 +140,14 @@ static void GameOver_DragonSlice(uint_fast8_t slice, uint_fast8_t scale)
 
 
 
-/**
- * @brief   Output numeric data
- *
- * @param   dest:  Destination to output to
- * @param   val:   Value to output
- * @return         Number of digits output
- */
-static uint_fast8_t GameOver_DecOut(uint8_t* dest, uint_fast16_t val)
-{
- uint_fast32_t bcd = text_bin16bcd(val);
- uint_fast8_t digits = 4U;
- while ((digits > 1U) && (((bcd >> (4U * (digits - 1U))) & 0xFU) == 0U)){
-  digits --;
- }
- uint_fast8_t outputdigit = digits;
- while (outputdigit != 0U){
-  outputdigit --;
-  uint_fast8_t cchr = (bcd >> (4U * outputdigit)) & 0xFU;
-  cchr += '0';
-  *dest = cchr;
-  dest ++;
- }
- return digits;
-}
-
-
-
 bool GameOver_Frame(void)
 {
  if (!gameover_active){
   return false;
  }
+
+ uint_fast8_t months = Game_Score_Turns();
+ uint_fast16_t pop = Game_Score_Pop();
 
  Palette_LL_FadeOut(8U);
  if (gameover_fadeframe < (256U - 8U)){
@@ -169,7 +164,7 @@ bool GameOver_Frame(void)
   ** do with this later more proper... Probably will stick permanent :p */
   SetRenderingParameters(FIRST_RENDER_LINE + 10U, 140U);
   GrText_LL_SetParams(0U, false, 0xFFU, 0x00U, 0x00U);
-  uint8_t* sprcanvas = gameover_workbuf;
+  uint8_t* sprcanvas = gameover_sprcanvas;
   spritecanvas_clear(sprcanvas, 3U, 136U);
   gameover_frame ++;
 
@@ -192,7 +187,7 @@ bool GameOver_Frame(void)
    col3 = Palette_LL_FadeColour(col3, flev);
   }
 
-  uint8_t* sprcanvas = gameover_workbuf;
+  uint8_t* sprcanvas = gameover_sprcanvas;
   Sprite_LL_Add(
       56U, yadj, 136U,
       col1, col2, col3,
@@ -238,15 +233,15 @@ bool GameOver_Frame(void)
 
    GrText_LL_SetParams(40U, false, 0x00U, 0x00U, 0xFFU);
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
-   text_fill(textarea, 0x20U, 200U);
+   text_fill(textarea, 0x20U, (5U * 40U));
    uint_fast8_t pos = 15U;
    pos += text_genstring(&textarea[pos], TEXT_GAMEOVER);
    pos = 9U + (2U * 40U);
    pos += text_genstring(&textarea[pos], TEXT_SURVIVED);
-   pos += GameOver_DecOut(&textarea[pos], Game_Score_Turns());
+   pos += text_decout(&textarea[pos], months);
    pos += text_genstring(&textarea[pos], TEXT_SURVMONTHS);
    pos = 1U + (3U * 40U);
-   pos += GameOver_DecOut(&textarea[pos], Game_Score_Pop());
+   pos += text_decout(&textarea[pos], pop);
    pos += text_genstring(&textarea[pos], TEXT_DEADPOP);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
@@ -254,15 +249,66 @@ bool GameOver_Frame(void)
     gameover_frame = 224U;
    }
 
-  }else if (gameover_frame < 255U){
+  }else if (gameover_frame < 254U){
 
    /* Dragon fades out */
    gameover_frame ++;
 
+  }else if (gameover_frame < 255U){
+
+   /* Reposition text mode to give high score entry where the dragon was
+   ** while keeping the bottom text intact */
+   Sprite_LL_Reset();
+   GrText_LL_Init(gameover_textarea - (10U * 40U), (15U * 40U), 0U);
+   GrText_LL_SetParams(40U + (10U * 8U), false, 0x00U, 0x00U, 0xFFU);
+   uint8_t* textarea = GrText_LL_GetRowPtr(0U);
+   text_fill(textarea, 0x20U, (10U * 40U));
+   gameover_frame ++;
+   if (!HiScore_IsEligible(months, pop)){
+    gameover_active = false; /* Exit here if no high score */
+   }
+
   }else{
 
-   gameover_active = false;
-   Sprite_LL_Reset();
+   /* High score entry (only if eligible to give a score) */
+   uint8_t* textarea = GrText_LL_GetRowPtr(0U);
+   text_fill(textarea, 0x20U, 40U);
+   text_fill(textarea + 80U, 0x20U, 40U);
+   uint_fast8_t endtxt = TEXT_ENDSEL;
+   if (gameover_cursor < HISCORE_NAME_MAX){
+    textarea[gameover_cursor + 12U] = '|';
+    textarea[gameover_cursor + 80U + 12U] = '|';
+    endtxt = TEXT_END;
+   }
+   text_genstring(&textarea[40U + 23U], endtxt);
+   for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
+    textarea[(40U + 12U) + pos] = gameover_name[pos];
+   }
+
+   uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
+   if ((ctrl & CONTROL_LL_LEFT) != 0U){
+    if (gameover_cursor > 0){ gameover_cursor --; }
+   }
+   if ((ctrl & CONTROL_LL_RIGHT) != 0U){
+    if (gameover_cursor < (HISCORE_NAME_MAX)){ gameover_cursor ++; }
+   }
+   if ((ctrl & CONTROL_LL_UP) != 0U){
+    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] - 1U) & 0x7FU;
+   }
+   if ((ctrl & CONTROL_LL_DOWN) != 0U){
+    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] + 1U) & 0x7FU;;
+   }
+   if ((ctrl & CONTROL_LL_ACTION) != 0U){
+    gameover_uppercase = !gameover_uppercase;
+   }
+   if ((ctrl & CONTROL_LL_MENU) != 0U){
+    if (gameover_cursor < (HISCORE_NAME_MAX)){
+     gameover_cursor = HISCORE_NAME_MAX;
+    }else{
+     HiScore_Send(&gameover_name[0], months, pop);
+     gameover_active = false;
+    }
+   }
 
   }
  }

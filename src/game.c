@@ -201,27 +201,6 @@ static void Game_Effect_Swap(void)
 
 
 /**
- * @brief   Output numeric data
- *
- * @param   dest:  Destination to output to
- * @param   val:   Value to output
- * @param   dig:   Number of digits
- */
-static void Game_DecOut(uint8_t* dest, uint_fast16_t val, uint_fast8_t dig)
-{
- uint_fast32_t bcd = text_bin16bcd(val);
- while (dig != 0U){
-  dig --;
-  uint_fast8_t cchr = (bcd >> (4U * dig)) & 0xFU;
-  cchr += '0';
-  *dest = cchr;
-  dest ++;
- }
-}
-
-
-
-/**
  * @brief   Add population
  *
  * @param   pop:   Number of people to add
@@ -283,12 +262,12 @@ static void Game_GoldUI(void)
  }
 
  if (selopt != GAME_OPT_END){
-  Game_DecOut(&textarea[38U], costs[selopt], 2U);
+  text_decout_zeropad(&textarea[38U], costs[selopt], 2U);
   if (selopt == GAME_OPT_POP){
-   Game_DecOut(&textarea[33U], game_pop, 3U);
+   text_decout_zeropad(&textarea[33U], game_pop, 3U);
   }
   if (selopt == GAME_OPT_SWAP){
-   Game_DecOut(&textarea[33U], game_swaps, 3U);
+   text_decout_zeropad(&textarea[33U], game_swaps, 3U);
   }
   if ((selopt == GAME_OPT_POP) || (selopt == GAME_OPT_SWAP)){
    textarea[36U] = 0x1EU; /* '<' of arrow */
@@ -398,16 +377,16 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
  text_fill(textarea, 0x20U, 40U);
  uint_fast8_t pos = 0U;
  pos += text_genstring(&textarea[pos], TEXT_GOLD);
- Game_DecOut(&textarea[pos], game_gold, 4U);
+ text_decout_zeropad(&textarea[pos], game_gold, 4U);
  pos += 6U;
  pos += text_genstring(&textarea[pos], TEXT_SWAPS);
- Game_DecOut(&textarea[pos], game_swaps, 3U);
+ text_decout_zeropad(&textarea[pos], game_swaps, 3U);
  pos += 5U;
  pos += text_genstring(&textarea[pos], TEXT_POP);
- Game_DecOut(&textarea[pos], game_pop, 3U);
+ text_decout_zeropad(&textarea[pos], game_pop, 3U);
  pos += 5U;
  pos += text_genstring(&textarea[pos], TEXT_TURN);
- Game_DecOut(&textarea[pos], game_turns, 3U);
+ text_decout_zeropad(&textarea[pos], game_turns, 3U);
 
  if (pfrep->active){
 
