@@ -209,8 +209,7 @@ void FormatEeprom(void) {
 
 	// Write free blocks IDs
 	for (u16 i = (EEPROM_BLOCK_SIZE*EEPROM_HEADER_SIZE); i < (64*EEPROM_BLOCK_SIZE); i+=EEPROM_BLOCK_SIZE) {
-		WriteEeprom(i,(u8)EEPROM_FREE_BLOCK);
-		WriteEeprom(i+1,(u8)(EEPROM_FREE_BLOCK>>8));
+		WriteEeprom16(i, EEPROM_FREE_BLOCK);
 	}
 
 }
@@ -235,8 +234,7 @@ void FormatEeprom2(u16 *ids, u8 count) {
 		}
 
 		if (j == count) {
-			WriteEeprom(i*EEPROM_BLOCK_SIZE,(u8)EEPROM_FREE_BLOCK);
-			WriteEeprom(i*EEPROM_BLOCK_SIZE+1,(u8)(EEPROM_FREE_BLOCK>>8));
+			WriteEeprom16(i*EEPROM_BLOCK_SIZE,EEPROM_FREE_BLOCK);
 		}
 	}
 }
@@ -244,7 +242,7 @@ void FormatEeprom2(u16 *ids, u8 count) {
 //returns true if the EEPROM has been setup to work with the kernel.
 bool isEepromFormatted(void){
 	unsigned id;
-	id=ReadEeprom(0)+(ReadEeprom(1)<<8);
+	id=ReadEeprom16(0);
 	return (id==EEPROM_SIGNATURE);
 }
 
@@ -272,7 +270,7 @@ char EepromWriteBlock(struct EepromBlockStruct *block){
 
 	//scan all blocks and get the adress of that block or the next free one.
 	for(i=EEPROM_HEADER_SIZE;i<64;i++){
-		id=ReadEeprom(i*EEPROM_BLOCK_SIZE)+(ReadEeprom((i*EEPROM_BLOCK_SIZE)+1)<<8);
+		id=ReadEeprom16(i*EEPROM_BLOCK_SIZE);
 		if(id==block->id){
 			destAddr=i*EEPROM_BLOCK_SIZE;
 			break;
@@ -283,24 +281,20 @@ char EepromWriteBlock(struct EepromBlockStruct *block){
 	if(destAddr==0 && nextFreeBlock==0) return EEPROM_ERROR_FULL;
 	if(nextFreeBlock!=0) destAddr=nextFreeBlock*EEPROM_BLOCK_SIZE;
 
-	for(i=0;i<EEPROM_BLOCK_SIZE;i++){
-		c=*srcPtr;
-		WriteEeprom(destAddr++,c);
-		srcPtr++;	
-	}
-	
+	WriteEepromBytes(destAddr,srcPtr,EEPROM_BLOCK_SIZE);
+
 	return 0;
 }
 
 /*
  * Reads a data block in the specified structure.
  *
- * Returns: 
+ * Returns:
  *  0x00 = Success
- * 	0x01 = EEPROM_ERROR_INVALID_BLOCK
- *	0x02 = EEPROM_ERROR_FULL
- *	0x03 = EEPROM_ERROR_BLOCK_NOT_FOUND
- *	0x04 = EEPROM_ERROR_NOT_FORMATTED
+ *  0x01 = EEPROM_ERROR_INVALID_BLOCK
+ *  0x02 = EEPROM_ERROR_FULL
+ *  0x03 = EEPROM_ERROR_BLOCK_NOT_FOUND
+ *  0x04 = EEPROM_ERROR_NOT_FORMATTED
  */
 char EepromReadBlock(unsigned int blockId,struct EepromBlockStruct *block){
 	unsigned char i;
@@ -312,19 +306,16 @@ char EepromReadBlock(unsigned int blockId,struct EepromBlockStruct *block){
 
 	//scan all blocks and get the adress of that block
 	for(i=0;i<32;i++){
-		id=ReadEeprom(i*EEPROM_BLOCK_SIZE)+(ReadEeprom((i*EEPROM_BLOCK_SIZE)+1)<<8);
+		id=ReadEeprom16(i*EEPROM_BLOCK_SIZE);
 		if(id==blockId){
 			destAddr=i*EEPROM_BLOCK_SIZE;
 			break;
 		}
 	}
 
-	if(destAddr==0xffff) return EEPROM_ERROR_BLOCK_NOT_FOUND;			
+	if(destAddr==0xffff) return EEPROM_ERROR_BLOCK_NOT_FOUND;
 
-	for(i=0;i<EEPROM_BLOCK_SIZE;i++){
-		*destPtr=ReadEeprom(destAddr++);
-		destPtr++;	
-	}
-	
+	ReadEepromBytes(destAddr,destPtr,EEPROM_BLOCK_SIZE);
+
 	return 0;
 }

@@ -87,7 +87,11 @@
 .global ReadJoypadExt
 .global SoftReset
 .global WriteEeprom
+.global WriteEeprom16
+.global WriteEepromBytes
 .global ReadEeprom
+.global ReadEeprom16
+.global ReadEepromBytes
 .global WaitUs
 .global UartInitRxBuffer
 .global IsRunningInEmulator
@@ -684,52 +688,132 @@ WaitUs:
 
 
 ;****************************
+; Read byte from EEPROM
+; Internal to assist other EEPROM functions
+; r25:r24 - addr
+; r23 - value read
+;****************************
+.section .text.ReadEeprom_Internal
+ReadEeprom_Internal:
+	; Wait for completion of previous write
+	sbic  _SFR_IO_ADDR(EECR), EEPE
+	rjmp  ReadEeprom_Internal
+	; Set up address (r25:r24) in address register
+	out   _SFR_IO_ADDR(EEARH), r25
+	out   _SFR_IO_ADDR(EEARL), r24
+	; Start eeprom read by writing EERE
+	cli
+	sbi   _SFR_IO_ADDR(EECR), EERE
+	; Read data from Data Register
+	in    r23,     _SFR_IO_ADDR(EEDR)
+	sei
+	ret
+
+
+;****************************
 ; Write byte to EEPROM
-; extern void WriteEeprom(int addr,u8 value)
+; extern void WriteEeprom(unsigned int addr,unsigned char value)
 ; r25:r24 - addr
 ; r22 - value to write
 ;****************************
 
 .section .text.WriteEeprom
 WriteEeprom:
-   ; Wait for completion of previous write
-   sbic _SFR_IO_ADDR(EECR),EEPE
-   rjmp WriteEeprom
-   ; Set up address (r25:r24) in address register
-   out _SFR_IO_ADDR(EEARH), r25
-   out _SFR_IO_ADDR(EEARL), r24
-   ; Write data (r22) to Data Register
-   out _SFR_IO_ADDR(EEDR),r22
-   cli
-   ; Write logical one to EEMPE
-   sbi _SFR_IO_ADDR(EECR),EEMPE
-   ; Start eeprom write by setting EEPE
-   sbi _SFR_IO_ADDR(EECR),EEPE
-   sei
-   ret
+	call  ReadEeprom_Internal
+	cp    r22,     r23
+	breq  WriteEeprom_end
+	; Write data (r22) to Data Register
+	out   _SFR_IO_ADDR(EEDR), r22
+	cli
+	; Write logical one to EEMPE
+	sbi   _SFR_IO_ADDR(EECR), EEMPE
+	; Start eeprom write by setting EEPE
+	sbi   _SFR_IO_ADDR(EECR), EEPE
+	sei
+WriteEeprom_end:
+	ret
+
+
+;****************************
+; Write word to EEPROM
+; extern void WriteEeprom(unsigned int addr,unsigned int value)
+; r25:r24 - addr
+; r23:r22 - value to write
+;****************************
+
+.section .text.WriteEeprom16
+WriteEeprom16:
+	call  WriteEeprom
+	mov   r22,     r23
+	adiw  r24,     1
+	jmp   WriteEeprom
+
+
+;****************************
+; Write bytes to EEPROM
+; extern void WriteEepromBytes(unsigned int addr,unsigned char const* buf,unsigned char len)
+; r25:r24 - addr
+; r23:r22 - source buffer to write from
+; r20 - number of bytes to write
+;****************************
+.section .text.WriteEepromBytes
+WriteEepromBytes:
+	movw  XL,      r22
+WriteEepromBytes_loop:
+	ld    r22,     X+
+	call  WriteEeprom
+	adiw  r24,     1
+	dec   r20
+	brne  WriteEepromBytes_loop
+	ret
 
 
 ;****************************
 ; Read byte from EEPROM
-; extern unsigned char ReadEeprom(int addr)
+; extern unsigned char ReadEeprom(unsigned int addr)
 ; r25:r24 - addr
 ; r24 - value read
 ;****************************
 .section .text.ReadEeprom
 ReadEeprom:
-   ; Wait for completion of previous write
-   sbic _SFR_IO_ADDR(EECR),EEPE
-   rjmp ReadEeprom
-   ; Set up address (r25:r24) in address register
-   out _SFR_IO_ADDR(EEARH), r25
-   out _SFR_IO_ADDR(EEARL), r24
-   ; Start eeprom read by writing EERE
-   cli
-   sbi _SFR_IO_ADDR(EECR),EERE
-   ; Read data from Data Register
-   in r24,_SFR_IO_ADDR(EEDR)
-   sei
-   ret
+	call  ReadEeprom_Internal
+	mov   r24,     r23
+	ret
+
+
+;****************************
+; Read word from EEPROM
+; extern unsigned int ReadEeprom16(unsigned int addr)
+; r25:r24 - addr
+; r25:r24 - value read
+;****************************
+.section .text.ReadEeprom16
+ReadEeprom16:
+	call  ReadEeprom_Internal
+	mov   r22,     r23
+	adiw  r24,     1
+	call  ReadEeprom_Internal
+	movw  r24,     r22
+	ret
+
+
+;****************************
+; Read bytes from EEPROM
+; extern unsigned int ReadEepromBytes(unsigned int addr,unsigned char* buf,unsigned char len)
+; r25:r24 - addr
+; r23:r22 - destination buffer to read into
+; r20 - number of bytes to read
+;****************************
+.section .text.ReadEepromBytes
+ReadEepromBytes:
+	movw  XL,      r22
+ReadEepromBytes_loop:
+	call  ReadEeprom_Internal
+	st    X+,      r23
+	adiw  r24,     1
+	dec   r20
+	brne  ReadEepromBytes_loop
+	ret
 
 
 ;****************************
