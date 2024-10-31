@@ -722,6 +722,9 @@ WriteEeprom:
 	call  ReadEeprom_Internal
 	cp    r22,     r23
 	breq  WriteEeprom_end
+	; Set up address (r25:r24) in address register
+	out   _SFR_IO_ADDR(EEARH), r25
+	out   _SFR_IO_ADDR(EEARL), r24
 	; Write data (r22) to Data Register
 	out   _SFR_IO_ADDR(EEDR), r22
 	cli
