@@ -32,6 +32,9 @@
 /** Count of EEPROM blocks */
 #define NVSTORE_LL_BLOCKCOUNT 64U
 
+/** Invalid address */
+#define NVSTORE_LL_INVALID    0xFFFFU
+
 
 
 /**
@@ -42,41 +45,15 @@
  */
 static uint_fast16_t NVStore_LL_ReadID(uint_fast16_t addr)
 {
- return ReadEeprom(addr) + (((uint_fast16_t)(ReadEeprom(addr + 1U))) << 8);
+ return ReadEeprom16(addr);
 }
 
 
 
-bool NVStore_LL_Read(uint8_t* data)
+static uint_fast16_t NVStore_LL_Locate(bool allocfree)
 {
  if (!isEepromFormatted()){
-  return false;
- }
- uint_fast16_t idaddress;
- bool found = false;
- for (uint_fast8_t blockidx = 0U; blockidx < NVSTORE_LL_BLOCKCOUNT; blockidx ++){
-  uint_fast16_t blockaddress = ((uint_fast16_t)(blockidx)) * NVSTORE_LL_BLOCKSIZE;
-  uint_fast16_t id = NVStore_LL_ReadID(blockaddress);
-  if (id == NVSTORE_LL_EEPROM_ID){
-   idaddress = blockaddress;
-   found = true;
-   break;
-  }
- }
- if (found){
-  for (uint_fast8_t pos = 0U; pos < NVSTORE_LL_SIZE; pos ++){
-   data[pos] = ReadEeprom((idaddress + pos) + 2U);
-  }
- }
- return found;
-}
-
-
-
-bool NVStore_LL_Write(uint8_t const* data)
-{
- if (!isEepromFormatted()){
-  return false;
+  return NVSTORE_LL_INVALID;
  }
  uint_fast16_t idaddress;
  uint_fast16_t freeaddress;
@@ -96,19 +73,35 @@ bool NVStore_LL_Write(uint8_t const* data)
   }
  }
  if (!found){
-  if (!freefound){
-   return false;
+  if ((!freefound) || (!allocfree)){
+   return NVSTORE_LL_INVALID;
   }
-  WriteEeprom(freeaddress, NVSTORE_LL_EEPROM_ID & 0xFFU);
-  WriteEeprom(freeaddress + 1U, NVSTORE_LL_EEPROM_ID >> 8);
+  WriteEeprom16(freeaddress, NVSTORE_LL_EEPROM_ID);
   idaddress = freeaddress;
  }
- for (uint_fast8_t pos = 0U; pos < NVSTORE_LL_SIZE; pos ++){
-  uint_fast16_t currentaddress = (idaddress + pos) + 2U;
-  uint_fast8_t currentbyte = ReadEeprom(currentaddress);
-  if (currentbyte != data[pos]){
-   WriteEeprom(currentaddress, data[pos]);
-  }
+ return idaddress + 2U;
+}
+
+
+
+bool NVStore_LL_Read(uint8_t* data)
+{
+ uint_fast16_t dataaddress = NVStore_LL_Locate(false);
+ if (dataaddress == NVSTORE_LL_INVALID){
+  return false;
  }
+ ReadEepromBytes(dataaddress, data, NVSTORE_LL_SIZE);
+ return true;
+}
+
+
+
+bool NVStore_LL_Write(uint8_t const* data)
+{
+ uint_fast16_t dataaddress = NVStore_LL_Locate(true);
+ if (dataaddress == NVSTORE_LL_INVALID){
+  return false;
+ }
+ WriteEepromBytes(dataaddress, data, NVSTORE_LL_SIZE);
  return true;
 }
