@@ -301,7 +301,7 @@ bool GameOver_Frame(void)
    if ((ctrl & CONTROL_LL_ACTION) != 0U){
     gameover_uppercase = !gameover_uppercase;
    }
-   if ((ctrl & CONTROL_LL_MENU) != 0U){
+   if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
     if (gameover_cursor < (HISCORE_NAME_MAX)){
      gameover_cursor = HISCORE_NAME_MAX;
     }else{
