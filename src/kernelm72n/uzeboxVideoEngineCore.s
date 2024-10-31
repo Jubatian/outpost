@@ -721,8 +721,9 @@ ReadEeprom_Internal:
 ; r23:r22 - value to write
 ;****************************
 WriteEeprom16:
+	mov   r21,     r23
 	rcall WriteEeprom
-	mov   r22,     r23
+	mov   r22,     r21
 	adiw  r24,     1
 	; rjmp  WriteEeprom -- Fall through to WriteEeprom
 
@@ -737,9 +738,6 @@ WriteEeprom:
 	rcall ReadEeprom_Internal
 	cp    r22,     r23
 	breq  WriteEeprom_end
-	; Set up address (r25:r24) in address register
-	out   _SFR_IO_ADDR(EEARH), r25
-	out   _SFR_IO_ADDR(EEARL), r24
 	; Write data (r22) to Data Register
 	out   _SFR_IO_ADDR(EEDR), r22
 	cli
