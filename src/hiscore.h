@@ -23,8 +23,7 @@
 #define HISCORE_H
 
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "hiscore_data.h"
 
 
 /** Maximum name string lenght (characters) for a score entry */
@@ -57,10 +56,23 @@ void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop);
 
 
 /**
+ * @brief   Send new entry with raw name to high score table
+ *
+ * Of the raw name input HISCORE_NAME_MAX bytes are read, with only the low 6
+ * bits being effective. See macro HISCORE_ASCII2RAW to convert ASCII
+ * characters to this format.
+ *
+ * @param   raw:    Raw name, HISCORE_NAME_MAX bytes
+ * @param   months: Months survived
+ * @param   pop:    Total population (all eaten by dragons now)
+ */
+void HiScore_SendRaw(uint8_t const* raw, uint_fast8_t months, uint_fast16_t pop);
+
+
+/**
  * @brief   Request high score elements
  *
- * If the entry doesn't exist, returns blank (spaces for name, zero for score
- * elements).
+ * If the entry doesn't exist, returns default scores.
  *
  * @param   rank:   Which entry to query, begins at 0 for 1st place.
  * @param   name:   Returns the name, space padded to HISCORE_NAME_MAX
@@ -69,6 +81,19 @@ void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop);
  */
 void HiScore_Get(
     uint_fast8_t rank, uint8_t* name, uint_fast8_t* months, uint_fast16_t* pop);
+
+
+/**
+ * @brief   Depacks raw name to ASCII
+ *
+ * May be used combined with HiScore_SendRaw() to maintain / reproduce an
+ * ASCII representation of the name (such as for display). The output does not
+ * receive a 0 terminator (so this may target VRAM directly).
+ *
+ * @param   raw:    Raw name data to depack, HISCORE_NAME_MAX sized
+ * @param   name:   Output name, HISCORE_NAME_MAX sized
+ */
+void HiScore_DepackRaw(uint8_t const* raw, uint8_t* name);
 
 
 #endif

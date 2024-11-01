@@ -81,6 +81,7 @@ OBJECTS += $(OBJDIR)/town.o
 OBJECTS += $(OBJDIR)/game.o
 OBJECTS += $(OBJDIR)/gameover.o
 OBJECTS += $(OBJDIR)/hiscore.o
+OBJECTS += $(OBJDIR)/hiscore_data.o
 OBJECTS += $(OBJDIR)/title.o
 OBJECTS += $(OBJDIR)/playfield.o
 OBJECTS += $(OBJDIR)/graphics_bg.o
@@ -116,6 +117,7 @@ DEPS += $(DEPDIR)/town.d
 DEPS += $(DEPDIR)/game.d
 DEPS += $(DEPDIR)/gameover.d
 DEPS += $(DEPDIR)/hiscore.d
+DEPS += $(DEPDIR)/hiscore_data.d
 DEPS += $(DEPDIR)/title.d
 DEPS += $(DEPDIR)/playfield.d
 DEPS += $(DEPDIR)/graphics_bg.d
@@ -199,6 +201,9 @@ $(OBJDIR)/seqalloc.o: src/seqalloc.c $(DEPDIR)/seqalloc.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/hiscore.o: src/hiscore.c $(DEPDIR)/hiscore.d
+	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/hiscore_data.o: src/hiscore_data.c $(DEPDIR)/hiscore_data.d
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/palette_ll.o: src/palette_ll.c $(DEPDIR)/palette_ll.d

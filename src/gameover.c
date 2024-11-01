@@ -35,6 +35,13 @@
 #include <uzebox.h>
 
 
+/** High score entry first retrigger delay (frames) */
+#define GAMEOVER_BUTTON_FIRSTDELAY  60U
+
+/** High score entry continued retrigger delay (frames) */
+#define GAMEOVER_BUTTON_REPEATDELAY  10U
+
+
 /** Gameover activity */
 static bool         gameover_active = false;
 
@@ -53,15 +60,21 @@ static uint8_t*     gameover_sprcanvas;
 /** Text area buffer */
 static uint8_t*     gameover_textarea;
 
-/** Name for high-score entry. Having it here as static allows it to
+/** Name (raw) for high-score entry. Having it here as static allows it to
  *  persist across plays which is nice, we have enough RAM! */
-static uint8_t      gameover_name[HISCORE_NAME_MAX];
+static uint8_t      gameover_rawname[HISCORE_NAME_MAX];
 
 /** Cursor position for high-score entry */
 static uint_fast8_t gameover_cursor;
 
 /** Uppercase selector for high-score entry */
 static bool         gameover_uppercase;
+
+/** Score entry retrigger mask to compare against held buttons */
+static uint_fast8_t gameover_retriggermask;
+
+/** Score entry retrigger countdown */
+static uint_fast8_t gameover_retriggertick;
 
 
 
@@ -83,6 +96,7 @@ void GameOver_Start(void)
  gameover_slice = 0U;
  gameover_cursor = 0U;
  gameover_uppercase = true;
+ gameover_retriggermask = 0U;
  gameover_active = true;
 }
 
@@ -264,6 +278,11 @@ bool GameOver_Frame(void)
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
    text_fill(textarea, 0x20U, (10U * 40U));
    gameover_frame ++;
+   if (gameover_rawname[0] == 0U){
+    /* Fill in default name if appears to be empty (if a name is persisting
+    ** from a previous play, keep it for the player) */
+    HiScore_Data_FillName(&gameover_rawname[0]);
+   }
    if (!HiScore_IsEligible(months, pop)){
     gameover_active = false; /* Exit here if no high score */
    }
@@ -281,31 +300,73 @@ bool GameOver_Frame(void)
     endtxt = TEXT_END;
    }
    text_genstring(&textarea[40U + 23U], endtxt);
-   for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
-    textarea[(40U + 12U) + pos] = gameover_name[pos];
-   }
+   HiScore_DepackRaw(&gameover_rawname[0], &textarea[40U + 12U]);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
+   if (ctrl != 0U){
+    gameover_retriggermask = ctrl;
+    gameover_retriggertick = GAMEOVER_BUTTON_FIRSTDELAY;
+   }else{
+    if (gameover_retriggermask != 0U){
+     if (gameover_retriggermask != Control_LL_GetHolds()){
+      gameover_retriggermask = 0U;
+     }else if (gameover_retriggertick != 0U){
+      gameover_retriggertick --;
+     }else{
+      gameover_retriggertick = GAMEOVER_BUTTON_REPEATDELAY;
+      ctrl = gameover_retriggermask;
+     }
+    }
+   }
+
+   if (gameover_cursor < HISCORE_NAME_MAX){
+    uint_fast8_t currentchar = gameover_rawname[gameover_cursor];
+    bool adjustcase = false;
+    if ((ctrl & CONTROL_LL_UP) != 0U){
+     currentchar = (currentchar - 1U) & 0x3FU;
+     if (currentchar == HISCORE_ASCII2RAW('z')){
+      /* Jump over lowercase range on an 'A' => 'z' transition */
+      currentchar = (HISCORE_ASCII2RAW('a') - 1U) & 0x3FU;
+     }
+     adjustcase = true;
+    }
+    if ((ctrl & CONTROL_LL_DOWN) != 0U){
+     currentchar = (currentchar + 1U) & 0x3FU;
+     if (currentchar == HISCORE_ASCII2RAW('A')){
+      /* Jump over uppercase range on a 'z' => 'A' transition */
+      currentchar = (HISCORE_ASCII2RAW('Z') + 1U) & 0x3FU;
+     }
+     adjustcase = true;
+    }
+    if ((ctrl & CONTROL_LL_ACTION) != 0U){
+     gameover_uppercase = !gameover_uppercase;
+     adjustcase = true;
+    }
+    if (adjustcase){
+     if (gameover_uppercase){
+      if ((currentchar >= HISCORE_ASCII2RAW('a')) && (currentchar <= HISCORE_ASCII2RAW('z'))){
+       currentchar = (currentchar - HISCORE_ASCII2RAW('a')) + HISCORE_ASCII2RAW('A');
+      }
+     }else{
+      if ((currentchar >= HISCORE_ASCII2RAW('A')) && (currentchar <= HISCORE_ASCII2RAW('Z'))){
+       currentchar = (currentchar - HISCORE_ASCII2RAW('A')) + HISCORE_ASCII2RAW('a');
+      }
+     }
+    }
+    gameover_rawname[gameover_cursor] = currentchar;
+   }
+
    if ((ctrl & CONTROL_LL_LEFT) != 0U){
     if (gameover_cursor > 0){ gameover_cursor --; }
    }
    if ((ctrl & CONTROL_LL_RIGHT) != 0U){
-    if (gameover_cursor < (HISCORE_NAME_MAX)){ gameover_cursor ++; }
-   }
-   if ((ctrl & CONTROL_LL_UP) != 0U){
-    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] - 1U) & 0x7FU;
-   }
-   if ((ctrl & CONTROL_LL_DOWN) != 0U){
-    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] + 1U) & 0x7FU;;
-   }
-   if ((ctrl & CONTROL_LL_ACTION) != 0U){
-    gameover_uppercase = !gameover_uppercase;
+    if (gameover_cursor < HISCORE_NAME_MAX){ gameover_cursor ++; }
    }
    if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
-    if (gameover_cursor < (HISCORE_NAME_MAX)){
+    if (gameover_cursor < HISCORE_NAME_MAX){
      gameover_cursor = HISCORE_NAME_MAX;
     }else{
-     HiScore_Send(&gameover_name[0], months, pop);
+     HiScore_SendRaw(&gameover_rawname[0], months, pop);
      gameover_active = false;
     }
    }
