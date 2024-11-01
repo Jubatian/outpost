@@ -761,6 +761,21 @@ def compile_tileset(rowidx, rowdata, maxunresolveddistance):
 
 
 
+# Generates string from an op, for output
+
+def op_to_string(op):
+    output = ""
+    if (op.label != False):
+        output += op.label
+        output += ":\n"
+    if (op.opstring == False):
+        output += "ERROR\n"
+    else:
+        output += op.opstring
+    return output
+
+
+
 # Attempt compiling tileset, starting with lax attitude towards unresolved
 # jumps, tightening if the tileset fails to compile.
 
@@ -783,6 +798,17 @@ entrypos = 0
 while (ops[entrypos].optype != OpType.ROWENTRY):
     entrypos += 1
 ops[entrypos].label = "tilerow_entry"
+
+# Remaining words in the block - to decide if the entry points could be tossed
+# at the end to pad out towards the next boundary, or rather have them in the
+# .text section. There are 48 words heading as of now (5 words for each tile
+# row, 16 bytes palette)
+
+fitthreshold = 48
+remwordsinblock = 256 - (len(ops) % 256)
+if (remwordsinblock == 256):
+    remwordsinblock = 0
+uselastblock = (remwordsinblock >= fitthreshold)
 
 # Generate heading
 
@@ -810,7 +836,18 @@ output += ".global m72_defpalette\n"
 output += ".global m72_deftilerows\n"
 output += "\n"
 output += "\n"
-output += ".section .text\n"
+
+if (uselastblock):
+    output += ".section M72_ALIGNED_SEC\n"
+    output += "\n"
+    output += ".balign 512\n"
+    output += "\n"
+    output += "\n"
+    for currentop in ops:
+        output += op_to_string(currentop)
+else:
+    output += ".section .text\n"
+
 output += "\n"
 output += "\n"
 output += "\n"
@@ -842,21 +879,16 @@ for idx in range(0, 8):
     output += "\n"
 output += "\n"
 output += "\n"
-output += ".section M72_ALIGNED_SEC\n"
-output += "\n"
-output += ".balign 512\n"
-output += "\n"
-output += "\n"
 
-for currentop in ops:
-    if (currentop.label != False):
-        output += currentop.label
-        output += ":\n"
-    if (currentop.opstring == False):
-        output += "ERROR\n"
-    else:
-        output += currentop.opstring
-output += "\n"
+if (not uselastblock):
+    output += ".section M72_ALIGNED_SEC\n"
+    output += "\n"
+    output += ".balign 512\n"
+    output += "\n"
+    output += "\n"
+    for currentop in ops:
+        output += op_to_string(currentop)
+    output += "\n"
 
 outfile.write(output)
 outfile.close()
