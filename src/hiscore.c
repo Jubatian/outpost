@@ -299,12 +299,12 @@ static uint_fast8_t HiScore_GetEntryByRank(
 static bool HiScore_CompareScore(
     uint8_t* data, uint_fast8_t entry, uint_fast8_t months, uint_fast16_t pop)
 {
- uint_fast8_t entrypop = HiScore_DepackPop(data, entry);
- if (entrypop > pop){
+ uint_fast8_t entrymonths = HiScore_DepackMonths(data, entry);
+ if (entrymonths > months){
   return false;
  }
- if (entrypop == pop){
-  if (HiScore_DepackMonths(data, entry) > months){
+ if (entrymonths == months){
+  if (HiScore_DepackPop(data, entry) > pop){
    return false;
   }
  }
