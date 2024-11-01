@@ -35,6 +35,13 @@
 #include <uzebox.h>
 
 
+/** High score entry first retrigger delay (frames) */
+#define GAMEOVER_BUTTON_FIRSTDELAY  60U
+
+/** High score entry continued retrigger delay (frames) */
+#define GAMEOVER_BUTTON_REPEATDELAY  10U
+
+
 /** Gameover activity */
 static bool         gameover_active = false;
 
@@ -63,6 +70,12 @@ static uint_fast8_t gameover_cursor;
 /** Uppercase selector for high-score entry */
 static bool         gameover_uppercase;
 
+/** Score entry retrigger mask to compare against held buttons */
+static uint_fast8_t gameover_retriggermask;
+
+/** Score entry retrigger countdown */
+static uint_fast8_t gameover_retriggertick;
+
 
 
 void GameOver_Start(void)
@@ -83,6 +96,7 @@ void GameOver_Start(void)
  gameover_slice = 0U;
  gameover_cursor = 0U;
  gameover_uppercase = true;
+ gameover_retriggermask = 0U;
  gameover_active = true;
 }
 
@@ -284,6 +298,21 @@ bool GameOver_Frame(void)
    HiScore_DepackRaw(&gameover_rawname[0], &textarea[40U + 12U]);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
+   if (ctrl != 0U){
+    gameover_retriggermask = ctrl;
+    gameover_retriggertick = GAMEOVER_BUTTON_FIRSTDELAY;
+   }else{
+    if (gameover_retriggermask != 0U){
+     if (gameover_retriggermask != Control_LL_GetHolds()){
+      gameover_retriggermask = 0U;
+     }else if (gameover_retriggertick != 0U){
+      gameover_retriggertick --;
+     }else{
+      gameover_retriggertick = GAMEOVER_BUTTON_REPEATDELAY;
+      ctrl = gameover_retriggermask;
+     }
+    }
+   }
 
    if (gameover_cursor < HISCORE_NAME_MAX){
     uint_fast8_t currentchar = gameover_rawname[gameover_cursor];
