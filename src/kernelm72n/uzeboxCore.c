@@ -261,7 +261,7 @@ u8 ReadPowerSwitch(void){
  * Returns: 0 on success or error codes
  */
 char EepromWriteBlock(struct EepromBlockStruct *block){
-	unsigned char i,nextFreeBlock=0,c;
+	unsigned char i,nextFreeBlock=0;
 	unsigned int destAddr=0,id;
 	unsigned char *srcPtr=(unsigned char *)block;
 
