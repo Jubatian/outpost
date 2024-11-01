@@ -30,6 +30,28 @@
 
 
 
+void HiScore_DepackRaw(uint8_t const* raw, uint8_t* name)
+{
+ for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
+  uint8_t databyte = raw[pos] & 0x3FU;
+  uint8_t namechar;
+  if (databyte == 0U){
+   namechar = ' ';
+  }else if (databyte < (1U + 26U)){
+   namechar = 'a' + (databyte - 1U);
+  }else if (databyte < (27U + 26U)){
+   namechar = 'A' + (databyte - 27U);
+  }else if (databyte < (53U + 10U)){
+   namechar = '0' + (databyte - 53U);
+  }else{
+   namechar = '-';
+  }
+  name[pos] = namechar;
+ }
+}
+
+
+
 /**
  * @brief   Depacks string from data entry
  *
@@ -44,22 +66,7 @@ static void HiScore_DepackName(
   return;
  }
  uint_fast8_t dataaddr = entry * HISCORE_NAME_MAX;
- for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
-  uint8_t databyte = data[dataaddr + pos] & 0x3FU;
-  uint8_t namechar;
-  if (databyte == 0U){
-   namechar = ' ';
-  }else if (databyte == 1U){
-   namechar = '-';
-  }else if (databyte < (2U + 10U)){
-   namechar = '0' + (databyte - 2U);
-  }else if (databyte < (12U + 26U)){
-   namechar = 'a' + (databyte - 12U);
-  }else{
-   namechar = 'A' + (databyte - 38U);
-  }
-  name[pos] = namechar;
- }
+ HiScore_DepackRaw(&data[dataaddr], name);
 }
 
 
@@ -90,21 +97,28 @@ static void HiScore_PackName(
   if (nameend){
    namechar = ' ';
   }
-  uint8_t databyte;
-  if (namechar == ' '){
-   databyte = 0U;
-  }else if (namechar == '-'){
-   databyte = 1U;
-  }else if ((namechar >= '0') && (namechar <= '9')){
-   databyte = 2U + (namechar - '0');
-  }else if ((namechar >= 'a') && (namechar <= 'z')){
-   databyte = 12U + (namechar - 'a');
-  }else if ((namechar >= 'A') && (namechar <= 'Z')){
-   databyte = 38U + (namechar - 'A');
-  }else{
-   databyte = 1U;
-  }
-  data[dataaddr + pos] = databyte;
+  data[dataaddr + pos] = HISCORE_ASCII2RAW(namechar);
+ }
+}
+
+
+
+/**
+ * @brief   Copies raw name into data entry. Erases entry's score!
+ *
+ * @param   data:   Stored data
+ * @param   entry:  Which entry to write data to
+ * @param   raw:    Input raw name
+ */
+static void HiScore_CopyRaw(
+    uint8_t* data, uint_fast8_t entry, uint8_t const* raw)
+{
+ if (entry >= HISCORE_TABLE_SIZE){
+  return;
+ }
+ uint_fast8_t dataaddr = entry * HISCORE_NAME_MAX;
+ for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
+  data[dataaddr + pos] = raw[pos] & 0x3FU;
  }
 }
 
@@ -328,6 +342,15 @@ bool HiScore_IsEligible(uint_fast8_t months, uint_fast16_t pop)
 
 void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop)
 {
+ uint8_t rawname[HISCORE_NAME_MAX];
+ HiScore_PackName(&rawname[0], 0U, name);
+ HiScore_SendRaw(&rawname[0], months, pop);
+}
+
+
+
+void HiScore_SendRaw(uint8_t const* raw, uint_fast8_t months, uint_fast16_t pop)
+{
  uint8_t scoredata[NVSTORE_LL_SIZE];
  HiScore_ReadData(&scoredata[0]);
  uint_fast8_t last = HiScore_GetEntryByRank(&scoredata[0], 0xFFU);
@@ -336,7 +359,7 @@ void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop)
  }
  /* Always the last score is replaced (minimizing NV storage writes), scores
  ** are not in order in the table! */
- HiScore_PackName(&scoredata[0], last, name);
+ HiScore_CopyRaw(&scoredata[0], last, raw);
  HiScore_PackMonths(&scoredata[0], last, months);
  HiScore_PackPop(&scoredata[0], last, pop);
  NVStore_LL_Write(&scoredata[0]);

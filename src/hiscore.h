@@ -34,6 +34,16 @@
 #define HISCORE_TABLE_SIZE  3U
 
 
+/** ASCII character to raw high score data */
+#define HISCORE_ASCII2RAW(asciichar) (\
+ ((asciichar) == ' ') ? 0U : \
+ (((asciichar) >= 'a') && ((asciichar) <= 'z')) ? (1U + ((asciichar) - 'a')) : \
+ (((asciichar) >= 'A') && ((asciichar) <= 'Z')) ? (27U + ((asciichar) - 'A')) : \
+ (((asciichar) >= '0') && ((asciichar) <= '9')) ? (53U + ((asciichar) - '0')) : \
+ ((asciichar) == '-') ? 63U : \
+ 63U)
+
+
 /**
  * @brief   Check if score is eligible for the high score table
  *
@@ -57,6 +67,20 @@ void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop);
 
 
 /**
+ * @brief   Send new entry with raw name to high score table
+ *
+ * Of the raw name input HISCORE_NAME_MAX bytes are read, with only the low 6
+ * bits being effective. See macro HISCORE_ASCII2RAW to convert ASCII
+ * characters to this format.
+ *
+ * @param   raw:    Raw name, HISCORE_NAME_MAX bytes
+ * @param   months: Months survived
+ * @param   pop:    Total population (all eaten by dragons now)
+ */
+void HiScore_SendRaw(uint8_t const* raw, uint_fast8_t months, uint_fast16_t pop);
+
+
+/**
  * @brief   Request high score elements
  *
  * If the entry doesn't exist, returns blank (spaces for name, zero for score
@@ -69,6 +93,19 @@ void HiScore_Send(uint8_t const* name, uint_fast8_t months, uint_fast16_t pop);
  */
 void HiScore_Get(
     uint_fast8_t rank, uint8_t* name, uint_fast8_t* months, uint_fast16_t* pop);
+
+
+/**
+ * @brief   Depacks raw name to ASCII
+ *
+ * May be used combined with HiScore_SendRaw() to maintain / reproduce an
+ * ASCII representation of the name (such as for display). The output does not
+ * receive a 0 terminator (so this may target VRAM directly).
+ *
+ * @param   raw:    Raw name data to depack, HISCORE_NAME_MAX sized
+ * @param   name:   Output name, HISCORE_NAME_MAX sized
+ */
+void HiScore_DepackRaw(uint8_t const* raw, uint8_t* name);
 
 
 #endif

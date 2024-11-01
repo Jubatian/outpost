@@ -53,9 +53,9 @@ static uint8_t*     gameover_sprcanvas;
 /** Text area buffer */
 static uint8_t*     gameover_textarea;
 
-/** Name for high-score entry. Having it here as static allows it to
+/** Name (raw) for high-score entry. Having it here as static allows it to
  *  persist across plays which is nice, we have enough RAM! */
-static uint8_t      gameover_name[HISCORE_NAME_MAX];
+static uint8_t      gameover_rawname[HISCORE_NAME_MAX];
 
 /** Cursor position for high-score entry */
 static uint_fast8_t gameover_cursor;
@@ -281,62 +281,45 @@ bool GameOver_Frame(void)
     endtxt = TEXT_END;
    }
    text_genstring(&textarea[40U + 23U], endtxt);
-   for (uint_fast8_t pos = 0U; pos < HISCORE_NAME_MAX; pos ++){
-    textarea[(40U + 12U) + pos] = gameover_name[pos];
-   }
+   HiScore_DepackRaw(&gameover_rawname[0], &textarea[40U + 12U]);
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
 
-   if ((ctrl & CONTROL_LL_ACTION) != 0U){
-    gameover_uppercase = !gameover_uppercase;
-   }
-
    if (gameover_cursor < HISCORE_NAME_MAX){
-    uint_fast8_t currentchar = gameover_name[gameover_cursor];
+    uint_fast8_t currentchar = gameover_rawname[gameover_cursor];
+    bool adjustcase = false;
     if ((ctrl & CONTROL_LL_UP) != 0U){
-     if       (currentchar == ' '){
-      currentchar = '-';
-     }else if (currentchar == '-'){
-      currentchar = '9';
-     }else if (currentchar == '0'){
-      if (gameover_uppercase){
-       currentchar = 'Z';
-      }else{
-       currentchar = 'z';
-      }
-     }else if ((currentchar == 'a') || (currentchar == 'A')){
-      currentchar = ' ';
-     }else{
-      currentchar --;
+     currentchar = (currentchar - 1U) & 0x3FU;
+     if (currentchar == HISCORE_ASCII2RAW('z')){
+      /* Jump over lowercase range on an 'A' => 'z' transition */
+      currentchar = (HISCORE_ASCII2RAW('a') - 1U) & 0x3FU;
      }
+     adjustcase = true;
     }
     if ((ctrl & CONTROL_LL_DOWN) != 0U){
-     if       (currentchar == '9'){
-      currentchar = '-';
-     }else if (currentchar == '-'){
-      currentchar = ' ';
-     }else if (currentchar == ' '){
-      if (gameover_uppercase){
-       currentchar = 'A';
-      }else{
-       currentchar = 'a';
+     currentchar = (currentchar + 1U) & 0x3FU;
+     if (currentchar == HISCORE_ASCII2RAW('A')){
+      /* Jump over uppercase range on a 'z' => 'A' transition */
+      currentchar = (HISCORE_ASCII2RAW('Z') + 1U) & 0x3FU;
+     }
+     adjustcase = true;
+    }
+    if ((ctrl & CONTROL_LL_ACTION) != 0U){
+     gameover_uppercase = !gameover_uppercase;
+     adjustcase = true;
+    }
+    if (adjustcase){
+     if (gameover_uppercase){
+      if ((currentchar >= HISCORE_ASCII2RAW('a')) && (currentchar <= HISCORE_ASCII2RAW('z'))){
+       currentchar = (currentchar - HISCORE_ASCII2RAW('a')) + HISCORE_ASCII2RAW('A');
       }
-     }else if ((currentchar == 'z') || (currentchar == 'Z')){
-      currentchar = '0';
      }else{
-      currentchar ++;
+      if ((currentchar >= HISCORE_ASCII2RAW('A')) && (currentchar <= HISCORE_ASCII2RAW('Z'))){
+       currentchar = (currentchar - HISCORE_ASCII2RAW('A')) + HISCORE_ASCII2RAW('a');
+      }
      }
     }
-    if (gameover_uppercase){
-     if ((currentchar >= 'a') && (currentchar <= 'z')){
-      currentchar = (currentchar - 'a') + 'A';
-     }
-    }else{
-     if ((currentchar >= 'A') && (currentchar <= 'Z')){
-      currentchar = (currentchar - 'A') + 'a';
-     }
-    }
-    gameover_name[gameover_cursor] = currentchar;
+    gameover_rawname[gameover_cursor] = currentchar;
    }
 
    if ((ctrl & CONTROL_LL_LEFT) != 0U){
@@ -349,7 +332,7 @@ bool GameOver_Frame(void)
     if (gameover_cursor < HISCORE_NAME_MAX){
      gameover_cursor = HISCORE_NAME_MAX;
     }else{
-     HiScore_Send(&gameover_name[0], months, pop);
+     HiScore_SendRaw(&gameover_rawname[0], months, pop);
      gameover_active = false;
     }
    }
