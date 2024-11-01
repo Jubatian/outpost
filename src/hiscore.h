@@ -23,8 +23,7 @@
 #define HISCORE_H
 
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "hiscore_data.h"
 
 
 /** Maximum name string lenght (characters) for a score entry */
@@ -32,16 +31,6 @@
 
 /** Number of entries in the high score table */
 #define HISCORE_TABLE_SIZE  3U
-
-
-/** ASCII character to raw high score data */
-#define HISCORE_ASCII2RAW(asciichar) (\
- ((asciichar) == ' ') ? 0U : \
- (((asciichar) >= 'a') && ((asciichar) <= 'z')) ? (1U + ((asciichar) - 'a')) : \
- (((asciichar) >= 'A') && ((asciichar) <= 'Z')) ? (27U + ((asciichar) - 'A')) : \
- (((asciichar) >= '0') && ((asciichar) <= '9')) ? (53U + ((asciichar) - '0')) : \
- ((asciichar) == '-') ? 63U : \
- 63U)
 
 
 /**
@@ -83,8 +72,7 @@ void HiScore_SendRaw(uint8_t const* raw, uint_fast8_t months, uint_fast16_t pop)
 /**
  * @brief   Request high score elements
  *
- * If the entry doesn't exist, returns blank (spaces for name, zero for score
- * elements).
+ * If the entry doesn't exist, returns default scores.
  *
  * @param   rank:   Which entry to query, begins at 0 for 1st place.
  * @param   name:   Returns the name, space padded to HISCORE_NAME_MAX

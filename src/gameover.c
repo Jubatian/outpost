@@ -278,6 +278,11 @@ bool GameOver_Frame(void)
    uint8_t* textarea = GrText_LL_GetRowPtr(0U);
    text_fill(textarea, 0x20U, (10U * 40U));
    gameover_frame ++;
+   if (gameover_rawname[0] == 0U){
+    /* Fill in default name if appears to be empty (if a name is persisting
+    ** from a previous play, keep it for the player) */
+    HiScore_Data_FillName(&gameover_rawname[0]);
+   }
    if (!HiScore_IsEligible(months, pop)){
     gameover_active = false; /* Exit here if no high score */
    }

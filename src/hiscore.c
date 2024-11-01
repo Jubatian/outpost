@@ -322,9 +322,7 @@ static bool HiScore_CompareScore(
  */
 static void HiScore_ReadData(uint8_t* data)
 {
- for (uint_fast8_t pos = 0U; pos < NVSTORE_LL_SIZE; pos ++){
-  data[pos] = 0U;
- }
+ HiScore_Data_Fill(data);
  NVStore_LL_Read(data);
 }
 
