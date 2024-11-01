@@ -286,23 +286,67 @@ bool GameOver_Frame(void)
    }
 
    uint_fast8_t ctrl = Control_LL_Get(CONTROL_LL_ALL);
+
+   if ((ctrl & CONTROL_LL_ACTION) != 0U){
+    gameover_uppercase = !gameover_uppercase;
+   }
+
+   if (gameover_cursor < HISCORE_NAME_MAX){
+    uint_fast8_t currentchar = gameover_name[gameover_cursor];
+    if ((ctrl & CONTROL_LL_UP) != 0U){
+     if       (currentchar == ' '){
+      currentchar = '-';
+     }else if (currentchar == '-'){
+      currentchar = '9';
+     }else if (currentchar == '0'){
+      if (gameover_uppercase){
+       currentchar = 'Z';
+      }else{
+       currentchar = 'z';
+      }
+     }else if ((currentchar == 'a') || (currentchar == 'A')){
+      currentchar = ' ';
+     }else{
+      currentchar --;
+     }
+    }
+    if ((ctrl & CONTROL_LL_DOWN) != 0U){
+     if       (currentchar == '9'){
+      currentchar = '-';
+     }else if (currentchar == '-'){
+      currentchar = ' ';
+     }else if (currentchar == ' '){
+      if (gameover_uppercase){
+       currentchar = 'A';
+      }else{
+       currentchar = 'a';
+      }
+     }else if ((currentchar == 'z') || (currentchar == 'Z')){
+      currentchar = '0';
+     }else{
+      currentchar ++;
+     }
+    }
+    if (gameover_uppercase){
+     if ((currentchar >= 'a') && (currentchar <= 'z')){
+      currentchar = (currentchar - 'a') + 'A';
+     }
+    }else{
+     if ((currentchar >= 'A') && (currentchar <= 'Z')){
+      currentchar = (currentchar - 'A') + 'a';
+     }
+    }
+    gameover_name[gameover_cursor] = currentchar;
+   }
+
    if ((ctrl & CONTROL_LL_LEFT) != 0U){
     if (gameover_cursor > 0){ gameover_cursor --; }
    }
    if ((ctrl & CONTROL_LL_RIGHT) != 0U){
-    if (gameover_cursor < (HISCORE_NAME_MAX)){ gameover_cursor ++; }
-   }
-   if ((ctrl & CONTROL_LL_UP) != 0U){
-    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] - 1U) & 0x7FU;
-   }
-   if ((ctrl & CONTROL_LL_DOWN) != 0U){
-    gameover_name[gameover_cursor] = (gameover_name[gameover_cursor] + 1U) & 0x7FU;;
-   }
-   if ((ctrl & CONTROL_LL_ACTION) != 0U){
-    gameover_uppercase = !gameover_uppercase;
+    if (gameover_cursor < HISCORE_NAME_MAX){ gameover_cursor ++; }
    }
    if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
-    if (gameover_cursor < (HISCORE_NAME_MAX)){
+    if (gameover_cursor < HISCORE_NAME_MAX){
      gameover_cursor = HISCORE_NAME_MAX;
     }else{
      HiScore_Send(&gameover_name[0], months, pop);
