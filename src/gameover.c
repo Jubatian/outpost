@@ -193,7 +193,10 @@ static bool GameOver_ScoreEntry(void)
   }
  }
 
+ bool nameentered = false;
+
  if (gameover_cursor < HISCORE_NAME_MAX){
+
   uint_fast8_t currentchar = gameover_rawname[gameover_cursor];
   bool adjustcase = false;
   if ((ctrl & CONTROL_LL_UP) != 0U){
@@ -228,22 +231,35 @@ static bool GameOver_ScoreEntry(void)
    }
   }
   gameover_rawname[gameover_cursor] = currentchar;
+
+ }else{
+
+  if ((ctrl & CONTROL_LL_ACTION) != 0U){
+   /* On <END>, like in the main game's menu, confirm selection */
+   nameentered = true;
+  }
+
  }
 
  if ((ctrl & CONTROL_LL_LEFT) != 0U){
   if (gameover_cursor > 0){ gameover_cursor --; }
  }
  if ((ctrl & CONTROL_LL_RIGHT) != 0U){
+  /* Allows walking past name characters onto <END> */
   if (gameover_cursor < HISCORE_NAME_MAX){ gameover_cursor ++; }
  }
  if (((ctrl & CONTROL_LL_ALTERN) != 0U) || ((ctrl & CONTROL_LL_MENU) != 0U)){
+  /* The Menu / Alternative action buttons here are supplementary, jumping to
+  ** the <END> and confirming (convenient if already the right name is there
+  ** from a previous play) */
   if (gameover_cursor < HISCORE_NAME_MAX){
    gameover_cursor = HISCORE_NAME_MAX;
   }else{
-   return true;
+   nameentered = true;
   }
  }
- return false;
+
+ return nameentered;
 }
 
 
