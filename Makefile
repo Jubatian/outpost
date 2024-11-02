@@ -20,7 +20,7 @@ PACKROM_DIR = .
 
 
 ## Game version string
-VERSION_STR = v1.0
+VERSION_STR = v1.1
 
 
 ## Uzebox kernel settings
