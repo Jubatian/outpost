@@ -68,19 +68,19 @@ static void Title_Frame_Title(void)
 {
  if (title_frame == 16U){
 
-  uint8_t* textarea = GrText_LL_GetRowPtr(13U);
+  uint8_t* textarea = GrText_LL_GetRowPtr(12U);
   uint_fast8_t pos = 10U;
   text_genstring(&textarea[pos], TEXT_TITLE);
 
  }else if (title_frame == 24U){
 
-  uint8_t* textarea = GrText_LL_GetRowPtr(16U);
+  uint8_t* textarea = GrText_LL_GetRowPtr(15U);
   uint_fast8_t pos = 11U;
   text_genstring(&textarea[pos], TEXT_TITLEDESC1);
 
  }else if (title_frame == 32U){
 
-  uint8_t* textarea = GrText_LL_GetRowPtr(17U);
+  uint8_t* textarea = GrText_LL_GetRowPtr(16U);
   uint_fast8_t pos = 9U;
   text_genstring(&textarea[pos], TEXT_TITLEDESC2);
 
@@ -106,7 +106,7 @@ static void Title_Frame_HiScore(void)
  }else if (title_frame < 48U){
 
   uint_fast8_t rank = (title_frame >> 3) - 3U;
-  uint8_t* textarea = GrText_LL_GetRowPtr(16U + rank);
+  uint8_t* textarea = GrText_LL_GetRowPtr(15U + rank);
   uint_fast8_t pos = 10U;
   uint_fast8_t months;
   uint_fast16_t pop;
@@ -153,7 +153,7 @@ bool Title_Frame(void)
 
   /* Title graphics */
 
-  textarea = GrText_LL_GetRowPtr(9U);
+  textarea = GrText_LL_GetRowPtr(8U);
   for (uint_fast8_t ypos = 0U; ypos < 2U; ypos ++){
    for (uint_fast8_t xpos = 0U; xpos < 12U; xpos ++){
     textarea[(ypos * 40U) + (xpos + 14U)] = (ypos << 4) + xpos;
@@ -165,7 +165,7 @@ bool Title_Frame(void)
 
   if (title_frame < 24U){
    /* Clear rows where title & score alternates */
-   uint_fast8_t row = 16U + (title_frame >> 3);
+   uint_fast8_t row = 15U + (title_frame >> 3);
    uint8_t* textarea = GrText_LL_GetRowPtr(row);
    text_fill(textarea, 0x20U, 40U);
   }
