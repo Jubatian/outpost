@@ -23,7 +23,7 @@
 .section .text
 
 
-.equ text_strcnt, 19
+.equ text_strcnt, 20
 
 text_strlist:
 	.byte lo8(text_str_gold), hi8(text_str_gold)
@@ -41,6 +41,7 @@ text_strlist:
 	.byte lo8(text_str_gameover), hi8(text_str_gameover)
 	.byte lo8(text_str_survived), hi8(text_str_survived)
 	.byte lo8(text_str_survmonths), hi8(text_str_survmonths)
+	.byte lo8(text_str_deadpop), hi8(text_str_deadpop)
 	.byte lo8(text_str_title), hi8(text_str_title)
 	.byte lo8(text_str_titledesc1), hi8(text_str_titledesc1)
 	.byte lo8(text_str_titledesc2), hi8(text_str_titledesc2)
@@ -84,6 +85,8 @@ text_str_survived:
 	.asciz "Survived for "
 text_str_survmonths:
 	.asciz " months"
+text_str_deadpop:
+	.asciz " souls lost to the dragons' hunger"
 text_str_title:
 	.asciz "in the Dragon's Maw"
 text_str_titledesc1:
@@ -226,3 +229,124 @@ text_bin16bcd:
 	mov   r22,     r25     ; Digits 1-2 into r22
 	ldi   r25,     0       ; Digits 7-8 are zero
 	ret
+
+
+
+/*
+** Internal to shift BCD upwards a digit
+**
+** Used to walk through digits from the most significant, in r24
+**
+** Inputs:
+**     r24: Most significant BCD digit
+** r23:r22: Further BCD digits
+** Outputs:
+**     r24: Next digit shifted in
+** r23:r22: Further BCD digits shifted up one
+** Clobbers:
+** r21
+*/
+text_decout_shiftdigits:
+	swap  r22
+	swap  r23
+	mov   r24,     r23
+	andi  r24,     0x0F
+	andi  r23,     0xF0
+	mov   r21,     r22
+	andi  r21,     0x0F
+	or    r23,     r21
+	andi  r22,     0xF0
+	ret
+
+
+
+/*
+** Space front padded decimal output
+**
+** Inputs:
+** r25:r24: Target data pointer
+** r23:r22: Value to output
+**     r20: Number of digits to output
+** Outputs:
+** r25:r24: Number of characters generated (equals no. of digits input)
+** Clobbers:
+** r19, r20, r21, r22, r23, X
+*/
+.global text_decout_spacepad
+text_decout_spacepad:
+	ldi   r19,     ' '
+
+text_decout_sp_entry:
+	movw  X,       r24
+	movw  r24,     r22
+	rcall text_bin16bcd
+	dec   r20
+	cpi   r20,     5       ; Range limit to 1 - 5 no. of digits
+	brcs  .+2
+	ldi   r20,     4
+	inc   r20
+	ldi   r25,     5
+	sub   r25,     r20
+	breq  text_decout_prep_loop_end
+text_decout_prep_loop:
+	rcall text_decout_shiftdigits
+	dec   r25
+	brne  text_decout_prep_loop
+text_decout_prep_loop_end:
+
+	mov   r25,     r20
+	ldi   r20,     0
+text_decout_sp_outloop:
+	cpi   r24,     0
+	breq  .+2
+	ldi   r19,     '0'
+	cpi   r19,     0
+	breq  .+6
+	add   r24,     r19
+	st    X+,      r24
+	inc   r20
+	rcall text_decout_shiftdigits
+	dec   r25
+	brne  text_decout_sp_outloop
+
+	mov   r24,     r20
+	ldi   r25,     0
+	ret
+
+
+
+/*
+** Zero front padded decimal output
+**
+** Inputs:
+** r25:r24: Target data pointer
+** r23:r22: Value to output
+**     r20: Number of digits to output
+** Outputs:
+** r25:r24: Number of characters generated (equals no. of digits input)
+** Clobbers:
+** r19, r20, r21, r22, r23, X
+*/
+.global text_decout_zeropad
+text_decout_zeropad:
+	ldi   r19,     '0'
+	rjmp  text_decout_sp_entry
+
+
+
+/*
+** Decimal output (no padding)
+**
+** Inputs:
+** r25:r24: Target data pointer
+** r23:r22: Value to output
+** Outputs:
+** r25:r24: Number of characters generated
+** Clobbers:
+** r19, r20, r21, r22, r23, X
+*/
+.global text_decout
+text_decout:
+	ldi   r20,     5
+	ldi   r19,     0
+	rjmp  text_decout_sp_entry

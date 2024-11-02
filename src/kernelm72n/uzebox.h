@@ -130,8 +130,12 @@
 	/*
 	 * EEPROM functions
 	 */
-    extern void WriteEeprom(unsigned int addr,unsigned char value);
-    extern unsigned char ReadEeprom(unsigned int addr);
+	extern void WriteEeprom(unsigned int addr,unsigned char value);
+	extern void WriteEeprom16(unsigned int addr,unsigned int value);
+	extern void WriteEepromBytes(unsigned int addr,unsigned char const* buf,unsigned char len);
+	extern unsigned char ReadEeprom(unsigned int addr);
+	extern unsigned int ReadEeprom16(unsigned int addr);
+	extern void ReadEepromBytes(unsigned int addr,unsigned char* buf,unsigned char len);
 	extern char EepromWriteBlock(struct EepromBlockStruct *block);
 	extern char EepromReadBlock(unsigned int blockId,struct EepromBlockStruct *block);
 	extern char EepromBlockExists(unsigned int blockId, u16* eepromAddr, u8* nextFreeBlockId);

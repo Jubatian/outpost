@@ -44,10 +44,11 @@
 #define TEXT_GAMEOVER      12U
 #define TEXT_SURVIVED      13U
 #define TEXT_SURVMONTHS    14U
-#define TEXT_TITLE         15U
-#define TEXT_TITLEDESC1    16U
-#define TEXT_TITLEDESC2    17U
-#define TEXT_VERSION       18U
+#define TEXT_DEADPOP       15U
+#define TEXT_TITLE         16U
+#define TEXT_TITLEDESC1    17U
+#define TEXT_TITLEDESC2    18U
+#define TEXT_VERSION       19U
 /** @} */
 
 
@@ -79,6 +80,38 @@ void text_fill(uint8_t* dest, uint8_t data, uint16_t len);
  * @return          BCD representation
  */
 uint32_t text_bin16bcd(uint16_t val);
+
+
+/**
+ * @brief   Output decimal value with space front padding
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @param   digits: Number of digits to display (space front padding)
+ * @return          Number of digits output (always the same as digits)
+ */
+uint8_t text_decout_spacepad(uint8_t* dest, uint16_t val, uint8_t digits);
+
+
+/**
+ * @brief   Output decimal value with zero front padding
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @param   digits: Number of digits to display (zero front padding)
+ * @return          Number of digits output (always the same as digits)
+ */
+uint8_t text_decout_zeropad(uint8_t* dest, uint16_t val, uint8_t digits);
+
+
+/**
+ * @brief   Output decimal value
+ *
+ * @param   dest:   Target area to output at
+ * @param   val:    16 bits value to output
+ * @return          Number of digits output
+ */
+uint8_t text_decout(uint8_t* dest, uint16_t val);
 
 
 #endif

@@ -30,8 +30,8 @@
 #include "bullet.h"
 #include "targeting.h"
 #include "town.h"
-#include "memsetup.h"
 #include "soundpatch.h"
+#include "seqalloc.h"
 
 
 
@@ -66,6 +66,9 @@
 /** Current town population (0: Game over / not running) */
 static uint_fast16_t game_pop = 0U;
 
+/** Total population (including dead) */
+static uint_fast16_t game_totalpop;
+
 /** Remaining swaps in the current turn */
 static uint_fast8_t  game_swaps;
 
@@ -74,6 +77,12 @@ static uint_fast8_t  game_turns;
 
 /** Current gold */
 static uint_fast16_t game_gold;
+
+/** Used swaps in the current turn */
+static uint_fast8_t  game_usedswaps;
+
+/** Maximum used swaps (to have something not reducing when undo is used) */
+static uint_fast8_t  game_maxusedswaps;
 
 /** Select or hover cursor mode */
 static bool          game_select;
@@ -133,6 +142,7 @@ void Game_Reset(void)
 void Game_Start(void)
 {
  game_pop = 10U;
+ game_totalpop = game_pop;
  game_swaps = 5U;
 #ifdef STRESSTEST
  game_turns = 100U;
@@ -140,6 +150,8 @@ void Game_Start(void)
  game_turns = 0U;
 #endif
  game_gold = 0U;
+ game_usedswaps = 0U;
+ game_maxusedswaps = 0U;
  game_select = false;
  game_goldactive = false;
  game_goldselect = GAME_OPT_END;
@@ -154,9 +166,16 @@ void Game_Start(void)
  game_textlines = 0U;
  game_startwave = false;
  game_maxdeltime = 0U;
- MemSetup(MEMSETUP_GAMESWAP);
+ SeqAlloc_Reset();
+ GrText_LL_Init(SeqAlloc(40U), 40U, 0U);
+ DragonWave_Init(SeqAlloc(DragonWave_Size()));
+ Bullet_Init(SeqAlloc(Bullet_ItemSize() * 80U), 80U);
+ Targeting_Init(SeqAlloc(Targeting_Size()));
+ uint_fast16_t freebytes = SeqAlloc_CountFreeBytes();
+ GrSprite_Init(GRSPRITE_ARR_SWAP, SeqAlloc(freebytes), freebytes, 32U);
  Playfield_Reset();
  Town_Reset();
+ DragonWave_Setup(game_turns);
 }
 
 
@@ -182,22 +201,14 @@ static void Game_Effect_Swap(void)
 
 
 /**
- * @brief   Output numeric data
+ * @brief   Add population
  *
- * @param   dest:  Destination to output to
- * @param   val:   Value to output
- * @param   dig:   Number of digits
+ * @param   pop:   Number of people to add
  */
-static void Game_DecOut(uint8_t* dest, uint_fast16_t val, uint_fast8_t dig)
+static void Game_AddPop(uint_fast8_t pop)
 {
- uint_fast32_t bcd = text_bin16bcd(val);
- while (dig != 0U){
-  dig --;
-  uint_fast8_t cchr = (bcd >> (4U * dig)) & 0xFU;
-  cchr += '0';
-  *dest = cchr;
-  dest ++;
- }
+ game_pop += pop;
+ game_totalpop += pop;
 }
 
 
@@ -251,12 +262,12 @@ static void Game_GoldUI(void)
  }
 
  if (selopt != GAME_OPT_END){
-  Game_DecOut(&textarea[38U], costs[selopt], 2U);
+  text_decout_zeropad(&textarea[38U], costs[selopt], 2U);
   if (selopt == GAME_OPT_POP){
-   Game_DecOut(&textarea[33U], game_pop, 3U);
+   text_decout_zeropad(&textarea[33U], game_pop, 3U);
   }
   if (selopt == GAME_OPT_SWAP){
-   Game_DecOut(&textarea[33U], game_swaps, 3U);
+   text_decout_zeropad(&textarea[33U], game_swaps, 3U);
   }
   if ((selopt == GAME_OPT_POP) || (selopt == GAME_OPT_SWAP)){
    textarea[36U] = 0x1EU; /* '<' of arrow */
@@ -302,7 +313,7 @@ static void Game_GoldUI(void)
    case GAME_OPT_POP:
     if (cost <= spendlim){
      game_gold -= cost;
-     game_pop ++;
+     Game_AddPop(1U);
      game_boughtpop ++;
     }
     break;
@@ -337,6 +348,18 @@ static void Game_GoldUI(void)
 
 
 /**
+ * @brief   Deduct a swap
+ */
+static void Game_DeductSwap(void)
+{
+ game_swaps --;
+ game_usedswaps ++;
+ game_maxusedswaps = game_usedswaps;
+}
+
+
+
+/**
  * @brief   Main game user interactions
  *
  * @param   pfrep:  Playfield activity report structure
@@ -354,16 +377,16 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
  text_fill(textarea, 0x20U, 40U);
  uint_fast8_t pos = 0U;
  pos += text_genstring(&textarea[pos], TEXT_GOLD);
- Game_DecOut(&textarea[pos], game_gold, 4U);
+ text_decout_zeropad(&textarea[pos], game_gold, 4U);
  pos += 6U;
  pos += text_genstring(&textarea[pos], TEXT_SWAPS);
- Game_DecOut(&textarea[pos], game_swaps, 3U);
+ text_decout_zeropad(&textarea[pos], game_swaps, 3U);
  pos += 5U;
  pos += text_genstring(&textarea[pos], TEXT_POP);
- Game_DecOut(&textarea[pos], game_pop, 3U);
+ text_decout_zeropad(&textarea[pos], game_pop, 3U);
  pos += 5U;
  pos += text_genstring(&textarea[pos], TEXT_TURN);
- Game_DecOut(&textarea[pos], game_turns, 3U);
+ text_decout_zeropad(&textarea[pos], game_turns, 3U);
 
  if (pfrep->active){
 
@@ -403,7 +426,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
       game_gold -= GAME_COST_ANYSWAP; /* Cost applied here (allows cancelling) */
       Playfield_Swap(game_xposanyswap, game_yposanyswap, xpos, ypos);
       Game_Effect_Swap();
-      game_swaps --;
+      Game_DeductSwap();
      }
      game_yposanyswap = 0U;
     }
@@ -454,9 +477,19 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
   if (sel){
    if (pypos != ypos){ pxpos = xpos; }
    if ((pypos != ypos) || (pxpos != xpos)){
-    Playfield_Swap(pxpos, pypos, xpos, ypos);
+    playfield_swapresult_tdef result = Playfield_Swap(pxpos, pypos, xpos, ypos);
     Game_Effect_Swap();
-    game_swaps --;
+    if (result == PLAYFIELD_SWAP_RESTORE){
+     /* An undo may happen after a wave as well, which case it just adds to
+     ** the swap budget of the next turn. Could be exploited as a quick way
+     ** to carry a swap over, which is OK. */
+     game_swaps ++;
+     if (game_usedswaps > 0U){
+      game_usedswaps --;
+     }
+    }else{
+     Game_DeductSwap();
+    }
    }
   }
   if (game_maxdeltime != 0U){
@@ -475,7 +508,7 @@ static void Game_PlayfieldUI(playfield_activity_tdef const* pfrep)
      game_maxdeltime = 0U;
      Playfield_Delete(xpos, ypos);
      Game_Effect_Swap();
-     game_swaps --;
+     Game_DeductSwap();
     }
    }
   }
@@ -537,8 +570,7 @@ bool Game_Frame(void)
   if (game_startwave){
 
    if (!(pfreport.active)){
-    MemSetup(MEMSETUP_GAMEWAVE);
-    DragonWave_Setup(game_turns);
+    GrSprite_ChangeArrangement(GRSPRITE_ARR_WAVE, 32U);
     game_startwave = false;
    }
 
@@ -568,13 +600,16 @@ bool Game_Frame(void)
 
   }else{
 
-   MemSetup(MEMSETUP_GAMESWAP);
-   game_pop ++; /* Population increments at end of turn */
+   GrSprite_ChangeArrangement(GRSPRITE_ARR_SWAP, 32U);
+   Game_AddPop(1U); /* Population increments at end of turn */
    game_swaps = 4U + (game_pop / 10U) + game_swapcarry;
+   game_usedswaps = 0U;
+   game_maxusedswaps = 0U;
    game_swapcarry = 0U;
    game_select = false; /* On turn start cursor hovers (no selection) */
    game_boughtswaps = 0U;
    game_turns ++;
+   DragonWave_Setup(game_turns); /* Prepare next turn's dragons */
   }
 
   /* Handle text area */
@@ -589,6 +624,7 @@ bool Game_Frame(void)
   if (game_textlines < GrText_LL_GetMaxLines()){
    game_textlines ++;
   }
+  GrSprite_AddDragonIndicators(game_maxusedswaps);
 
   if (game_goldactive){
    Game_GoldUI();
@@ -609,4 +645,11 @@ bool Game_Frame(void)
 uint_fast8_t Game_Score_Turns(void)
 {
  return game_turns;
+}
+
+
+
+uint_fast16_t Game_Score_Pop(void)
+{
+ return game_totalpop;
 }

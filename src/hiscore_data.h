@@ -19,40 +19,38 @@
 */
 
 
-#ifndef MEMSETUP_H
-#define MEMSETUP_H
+#ifndef HISCORE_DATA_H
+#define HISCORE_DATA_H
+
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
 
 
-/** Memory arrangement setups */
-typedef enum{
- MEMSETUP_GAMESWAP,
- MEMSETUP_GAMEWAVE,
- MEMSETUP_MENU,
- MEMSETUP_TITLE,
-}memsetup_arrangement_tdef;
-
-
-
-/**
- * @brief   Setup memory allocation
- *
- * Sets memory and resource allocation for a given usage
- *
- * @param   arrtyp: Arrangement type
- */
-void MemSetup(memsetup_arrangement_tdef arrtyp);
+/** ASCII character to raw high score data */
+#define HISCORE_ASCII2RAW(asciichar) (\
+ ((asciichar) == ' ') ? 0U : \
+ (((asciichar) >= 'a') && ((asciichar) <= 'z')) ? (1U + ((asciichar) - 'a')) : \
+ (((asciichar) >= 'A') && ((asciichar) <= 'Z')) ? (27U + ((asciichar) - 'A')) : \
+ (((asciichar) >= '0') && ((asciichar) <= '9')) ? (53U + ((asciichar) - '0')) : \
+ ((asciichar) == '-') ? 63U : \
+ 63U)
 
 
 /**
- * @brief   Get work area pointer
+ * @brief   Fill in default high score data
  *
- * Some arrangements provide a work area, if not, the return is NULL
+ * @param   dest:   Destination to fill with the data (3x HISCORE_NAME_MAX)
  */
-uint8_t* MemSetup_GetWorkArea(void);
+void HiScore_Data_Fill(uint8_t* dest);
+
+
+/**
+ * @brief   Fill in default name
+ *
+ * @param   dest:   Destination raw name to fill in (HISCORE_NAME_MAX bytes)
+ */
+void HiScore_Data_FillName(uint8_t* dest);
 
 
 #endif
