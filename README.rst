@@ -101,6 +101,8 @@ While playing, knowing the followings may also come handy:
   small Level 1 towers would result in a Level 3 tower).
 - Any item can be dropped at the cost of a swap by holding Select on it for
   about a second.
+- An accidential swap (unless it matched) can be reverted by swapping the
+  items back (even after an attack wave).
 
 
 
