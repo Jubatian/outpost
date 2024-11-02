@@ -111,7 +111,7 @@ limited instructions and registers used for this, the C compiler doesn't do a
 good job coming up with optimal code here (size and performance).
 
 In overall given handling ROM data requires unusual constructs in C anyway,
-this was just rather all done in assembler.
+this was just rather mostly done in assembler.
 
 
 Pointer arithmetic
@@ -138,11 +138,10 @@ mostly ensuring one pointer register (Z) is sufficient to do it.
 Memory management
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The game uses rudimentary memory management to allow for reusing memory areas
-in different areas of the game. Something which at high level would be
-resolved by dynamic memory allocation.
-
-Not great, but was a necessity to make the game possible.
+The game uses a simple heap allocator with no free, but with capability to
+reset. This is useful for realizing different stages (title screen, main game,
+game over screen), allowing building up different memory configurations for
+them in a clean manner.
 
 
 Portability
