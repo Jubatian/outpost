@@ -174,6 +174,10 @@ for height in sheights:
     ostr = "\t.byte {0}\n"
     output += ostr.format(height)
 
+# Ensure correct alignment in case program code follows
+
+output += "\n.balign 2\n"
+
 output += "\n"
 output += "\n"
 output += "; Sprite data needs to be in low ROM area\n"
@@ -201,7 +205,6 @@ for idx, sdataitem in enumerate(sdata):
             obyte = 0
             comma = True
     output += "\n"
-
 
 outfile.write(output)
 outfile.close()
